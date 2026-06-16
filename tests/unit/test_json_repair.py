@@ -1,7 +1,5 @@
 """Tests for truncated JSON repair in prediction analyzer."""
 
-import pytest
-
 from src.prediction.analyzer import _extract_json_from_text, _repair_truncated_json
 
 
@@ -11,6 +9,7 @@ class TestRepairTruncatedJson:
         result = _repair_truncated_json(fragment)
         assert result is not None
         import json
+
         parsed = json.loads(result)
         assert parsed["key"] == "value"
         assert parsed["score"] == 0.8
@@ -20,6 +19,7 @@ class TestRepairTruncatedJson:
         result = _repair_truncated_json(fragment)
         assert result is not None
         import json
+
         parsed = json.loads(result)
         assert parsed["outer"]["inner"] == 42
 
@@ -28,6 +28,7 @@ class TestRepairTruncatedJson:
         result = _repair_truncated_json(fragment)
         assert result is not None
         import json
+
         parsed = json.loads(result)
         assert parsed["items"] == [1, 2, 3]
 
@@ -36,6 +37,7 @@ class TestRepairTruncatedJson:
         result = _repair_truncated_json(fragment)
         assert result is not None
         import json
+
         parsed = json.loads(result)
         assert parsed["key"] == "value"
 
@@ -56,6 +58,7 @@ class TestRepairTruncatedJson:
         result = _repair_truncated_json(fragment)
         assert result is not None
         import json
+
         parsed = json.loads(result)
         assert parsed["a"] == 1
 
@@ -65,6 +68,7 @@ class TestExtractJsonTruncated:
         text = '```json\n{"prediction": "buy", "confidence": 0.85'
         result = _extract_json_from_text(text)
         import json
+
         parsed = json.loads(result)
         assert parsed["prediction"] == "buy"
 
@@ -72,6 +76,7 @@ class TestExtractJsonTruncated:
         text = '```json\n{"key": "value"}\n```'
         result = _extract_json_from_text(text)
         import json
+
         parsed = json.loads(result)
         assert parsed["key"] == "value"
 
@@ -79,5 +84,6 @@ class TestExtractJsonTruncated:
         text = 'Some preamble {"answer": 42} trailing text'
         result = _extract_json_from_text(text)
         import json
+
         parsed = json.loads(result)
         assert parsed["answer"] == 42

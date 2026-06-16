@@ -92,24 +92,28 @@ class TestSignalBridge:
     def test_publish_from_report(self):
         redis_mock = MagicMock()
         bridge = SignalBridge(redis_client=redis_mock)
-        result = bridge.publish_from_report({
-            "symbol": "600519",
-            "signal": "bullish",
-            "confidence": 0.8,
-            "summary": "test",
-            "action": "buy",
-        })
+        result = bridge.publish_from_report(
+            {
+                "symbol": "600519",
+                "signal": "bullish",
+                "confidence": 0.8,
+                "summary": "test",
+                "action": "buy",
+            }
+        )
         assert result is True
 
     def test_publish_from_recommendation(self):
         redis_mock = MagicMock()
         bridge = SignalBridge(redis_client=redis_mock)
-        result = bridge.publish_from_recommendation({
-            "symbol": "600036",
-            "action": "buy",
-            "confidence": 0.7,
-            "style": "growth",
-        })
+        result = bridge.publish_from_recommendation(
+            {
+                "symbol": "600036",
+                "action": "buy",
+                "confidence": 0.7,
+                "style": "growth",
+            }
+        )
         assert result is True
 
     def test_publish_failure_graceful(self):

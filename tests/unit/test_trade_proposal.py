@@ -58,14 +58,22 @@ class TestTradeProposalToDict:
 
     def test_thesis_field_serializes(self):
         thesis = InvestmentThesis(
-            symbol="600519", name="贵州茅台",
-            direction="bullish", conviction=0.8,
+            symbol="600519",
+            name="贵州茅台",
+            direction="bullish",
+            conviction=0.8,
             thesis_text="Strong brand",
         )
         proposal = TradeProposal(
-            symbol="600519", name="贵州茅台", action="buy",
-            shares=100, confidence=0.8, debate_summary="ok",
-            bull_score=0.6, bear_score=0.4, thesis=thesis,
+            symbol="600519",
+            name="贵州茅台",
+            action="buy",
+            shares=100,
+            confidence=0.8,
+            debate_summary="ok",
+            bull_score=0.6,
+            bear_score=0.4,
+            thesis=thesis,
         )
         d = proposal.to_dict()
         assert d["thesis"] is not None
@@ -73,9 +81,14 @@ class TestTradeProposalToDict:
 
     def test_thesis_none_serializes_to_none(self):
         proposal = TradeProposal(
-            symbol="600519", name="贵州茅台", action="buy",
-            shares=100, confidence=0.8, debate_summary="ok",
-            bull_score=0.6, bear_score=0.4,
+            symbol="600519",
+            name="贵州茅台",
+            action="buy",
+            shares=100,
+            confidence=0.8,
+            debate_summary="ok",
+            bull_score=0.6,
+            bear_score=0.4,
         )
         d = proposal.to_dict()
         assert d["thesis"] is None
@@ -84,8 +97,10 @@ class TestTradeProposalToDict:
 class TestInvestmentThesisDefaults:
     def test_default_values(self):
         thesis = InvestmentThesis(
-            symbol="600519", name="贵州茅台",
-            direction="bullish", conviction=0.7,
+            symbol="600519",
+            name="贵州茅台",
+            direction="bullish",
+            conviction=0.7,
             thesis_text="Test",
         )
         assert thesis.key_assumptions == []
@@ -102,8 +117,10 @@ class TestInvestmentThesisDefaults:
 
     def test_to_dict_roundtrip(self):
         thesis = InvestmentThesis(
-            symbol="600519", name="贵州茅台",
-            direction="bullish", conviction=0.7,
+            symbol="600519",
+            name="贵州茅台",
+            direction="bullish",
+            conviction=0.7,
             thesis_text="Test thesis",
             key_assumptions=["A1"],
             sector="消费",
@@ -118,9 +135,12 @@ class TestInvestmentThesisDefaults:
 class TestAggregatedSignalPriorityScore:
     def test_priority_score_via_compute(self):
         signal = AggregatedSignal(
-            symbol="600519", name="贵州茅台",
-            direction=SignalDirection.BUY, source="test",
-            confidence=0.8, urgency=UrgencyTier.NORMAL,
+            symbol="600519",
+            name="贵州茅台",
+            direction=SignalDirection.BUY,
+            source="test",
+            confidence=0.8,
+            urgency=UrgencyTier.NORMAL,
             reason="test",
         )
         score = SignalAggregator.compute_priority_score(signal)
@@ -129,15 +149,26 @@ class TestAggregatedSignalPriorityScore:
 
     def test_critical_urgency_scores_highest(self):
         normal = AggregatedSignal(
-            symbol="A", name="A", direction=SignalDirection.BUY,
-            source="t", confidence=1.0, urgency=UrgencyTier.NORMAL, reason="",
+            symbol="A",
+            name="A",
+            direction=SignalDirection.BUY,
+            source="t",
+            confidence=1.0,
+            urgency=UrgencyTier.NORMAL,
+            reason="",
         )
         critical = AggregatedSignal(
-            symbol="B", name="B", direction=SignalDirection.SELL,
-            source="t", confidence=1.0, urgency=UrgencyTier.CRITICAL, reason="",
+            symbol="B",
+            name="B",
+            direction=SignalDirection.SELL,
+            source="t",
+            confidence=1.0,
+            urgency=UrgencyTier.CRITICAL,
+            reason="",
         )
-        assert SignalAggregator.compute_priority_score(critical) > \
-               SignalAggregator.compute_priority_score(normal)
+        assert SignalAggregator.compute_priority_score(
+            critical
+        ) > SignalAggregator.compute_priority_score(normal)
 
 
 class TestCycleResultToDict:
@@ -165,13 +196,20 @@ class TestCycleResultToDict:
 
     def test_to_dict_with_proposals(self):
         proposal = TradeProposal(
-            symbol="600519", name="贵州茅台", action="buy",
-            shares=100, confidence=0.8, debate_summary="ok",
-            bull_score=0.6, bear_score=0.4,
+            symbol="600519",
+            name="贵州茅台",
+            action="buy",
+            shares=100,
+            confidence=0.8,
+            debate_summary="ok",
+            bull_score=0.6,
+            bear_score=0.4,
         )
         result = CycleResult(
-            cycle_id="x", duration_seconds=1.0,
-            signals_processed=1, proposals_generated=[proposal],
+            cycle_id="x",
+            duration_seconds=1.0,
+            signals_processed=1,
+            proposals_generated=[proposal],
         )
         d = result.to_dict()
         assert len(d["proposals_generated"]) == 1

@@ -222,16 +222,20 @@ class TestRunIdFiltering:
         run1 = "run-aaa"
         run2 = "run-bbb"
         # Run 1: 3 stocks
-        store.save_batch([
-            _make_rec(symbol="600519", run_id=run1),
-            _make_rec(symbol="000858", name="五粮液", run_id=run1),
-            _make_rec(symbol="000333", name="美的集团", run_id=run1),
-        ])
+        store.save_batch(
+            [
+                _make_rec(symbol="600519", run_id=run1),
+                _make_rec(symbol="000858", name="五粮液", run_id=run1),
+                _make_rec(symbol="000333", name="美的集团", run_id=run1),
+            ]
+        )
         # Run 2: 2 stocks (the latest)
-        store.save_batch([
-            _make_rec(symbol="601318", name="中国平安", run_id=run2),
-            _make_rec(symbol="600036", name="招商银行", run_id=run2),
-        ])
+        store.save_batch(
+            [
+                _make_rec(symbol="601318", name="中国平安", run_id=run2),
+                _make_rec(symbol="600036", name="招商银行", run_id=run2),
+            ]
+        )
 
         today = store.get_today_recommendations()
         symbols = {r["symbol"] for r in today}
@@ -239,10 +243,12 @@ class TestRunIdFiltering:
 
     def test_today_fallback_no_run_id(self, store: RecStore) -> None:
         """Old data without run_id → returns all of today's records (backward compat)."""
-        store.save_batch([
-            _make_rec(symbol="600519"),
-            _make_rec(symbol="000858", name="五粮液"),
-        ])
+        store.save_batch(
+            [
+                _make_rec(symbol="600519"),
+                _make_rec(symbol="000858", name="五粮液"),
+            ]
+        )
 
         today = store.get_today_recommendations()
         assert len(today) == 2
@@ -251,14 +257,18 @@ class TestRunIdFiltering:
         """count_today_active should count only the latest run's symbols."""
         run1 = "run-old"
         run2 = "run-new"
-        store.save_batch([
-            _make_rec(symbol="600519", run_id=run1),
-            _make_rec(symbol="000858", name="五粮液", run_id=run1),
-            _make_rec(symbol="000333", name="美的集团", run_id=run1),
-        ])
-        store.save_batch([
-            _make_rec(symbol="601318", name="中国平安", run_id=run2),
-        ])
+        store.save_batch(
+            [
+                _make_rec(symbol="600519", run_id=run1),
+                _make_rec(symbol="000858", name="五粮液", run_id=run1),
+                _make_rec(symbol="000333", name="美的集团", run_id=run1),
+            ]
+        )
+        store.save_batch(
+            [
+                _make_rec(symbol="601318", name="中国平安", run_id=run2),
+            ]
+        )
 
         count = store.count_today_active()
         assert count == 1  # only run2's single stock

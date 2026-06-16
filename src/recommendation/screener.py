@@ -387,6 +387,7 @@ class StockScreener:
         try:
             if self._overnight_risk is None:
                 from src.recommendation.overnight_risk import OvernightRiskCalculator
+
                 self._overnight_risk = OvernightRiskCalculator()
 
             symbols = [c.symbol for c in candidates[:15]]  # Top 15 only (perf)
@@ -409,15 +410,16 @@ class StockScreener:
                         c.score = round(c.score * max(0.6, penalty), 4)
                         logger.debug(
                             "Overnight risk penalty: %s risk=%.2f score %.4f→%.4f",
-                            c.symbol, profile.risk_score, old_score, c.score,
+                            c.symbol,
+                            profile.risk_score,
+                            old_score,
+                            c.score,
                         )
         except Exception as exc:
             logger.debug("Overnight risk enrichment failed: %s", exc)
 
     @staticmethod
-    def _get_limit_up_pct(
-        symbol: str, limit_up_config: dict[str, float]
-    ) -> float:
+    def _get_limit_up_pct(symbol: str, limit_up_config: dict[str, float]) -> float:
         """Determine limit-up percentage based on stock board type."""
         bare = _strip_exchange_prefix(symbol)
         if bare.startswith(("300", "301")):

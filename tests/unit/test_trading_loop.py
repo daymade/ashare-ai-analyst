@@ -93,8 +93,12 @@ class TestRunPremarket:
         await loop.run_premarket()
         mock_deps["notification_dispatcher"].dispatch.assert_called_once()
         call_kwargs = mock_deps["notification_dispatcher"].dispatch.call_args
-        assert call_kwargs[1]["notification_type"] == "morning_briefing" or \
-               call_kwargs[0][0] == "morning_briefing" if call_kwargs[0] else True
+        assert (
+            call_kwargs[1]["notification_type"] == "morning_briefing"
+            or call_kwargs[0][0] == "morning_briefing"
+            if call_kwargs[0]
+            else True
+        )
 
 
 class TestRunPostmarket:

@@ -197,7 +197,9 @@ class RecStore:
                     rec.status,
                     1 if rec.ai_analyzed else 0,
                     rec.run_id,
-                    json.dumps(rec.sub_scores, ensure_ascii=False) if rec.sub_scores else None,
+                    json.dumps(rec.sub_scores, ensure_ascii=False)
+                    if rec.sub_scores
+                    else None,
                 ),
             )
             conn.commit()
@@ -240,7 +242,9 @@ class RecStore:
                         r.status,
                         1 if r.ai_analyzed else 0,
                         r.run_id,
-                        json.dumps(r.sub_scores, ensure_ascii=False) if r.sub_scores else None,
+                        json.dumps(r.sub_scores, ensure_ascii=False)
+                        if r.sub_scores
+                        else None,
                     )
                     for r in recs
                 ],
@@ -305,7 +309,9 @@ class RecStore:
     def _today_cutoff_utc() -> str:
         """Return start of today (CST) as a UTC ISO timestamp for SQL comparison."""
         _cst = ZoneInfo("Asia/Shanghai")
-        today_start = datetime.now(_cst).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = datetime.now(_cst).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
         return today_start.astimezone(UTC).isoformat()
 
     def get_today_recommendations(
@@ -669,10 +675,16 @@ class RecStore:
                 result[style] = {
                     "count": count,
                     "win_rate_t1": round(wins_t1 / count, 4) if count > 0 else None,
-                    "avg_return_t1": round(d["avg_return_t1"], 4) if d["avg_return_t1"] is not None else None,
+                    "avg_return_t1": round(d["avg_return_t1"], 4)
+                    if d["avg_return_t1"] is not None
+                    else None,
                     "wins_t3": d["wins_t3"] or 0,
-                    "win_rate_t3": round((d["wins_t3"] or 0) / count, 4) if count > 0 else None,
-                    "avg_return_t3": round(d["avg_return_t3"], 4) if d["avg_return_t3"] is not None else None,
+                    "win_rate_t3": round((d["wins_t3"] or 0) / count, 4)
+                    if count > 0
+                    else None,
+                    "avg_return_t3": round(d["avg_return_t3"], 4)
+                    if d["avg_return_t3"] is not None
+                    else None,
                 }
             return result
         except Exception as exc:

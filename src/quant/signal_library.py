@@ -335,7 +335,7 @@ def _eval_rsi_extreme(
         strength = 0.0
 
         if len(closes) >= period + mid_lookback + 1:
-            prev_rsi = _compute_rsi(closes.iloc[: -mid_lookback], period)
+            prev_rsi = _compute_rsi(closes.iloc[:-mid_lookback], period)
             if not np.isnan(prev_rsi):
                 rsi_falling = rsi < prev_rsi
                 rsi_rising = rsi > prev_rsi

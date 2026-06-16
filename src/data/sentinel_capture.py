@@ -273,7 +273,9 @@ class SentinelCapture:
 
     def _write_output(self, output: dict[str, Any]) -> Path:
         """Write sentinel output to data/raw/gemini_sense.json."""
-        output_path_str = self._config.get("output_path", "workspace/sentinel/gemini_sense.json")
+        output_path_str = self._config.get(
+            "output_path", "workspace/sentinel/gemini_sense.json"
+        )
 
         # Resolve relative to project root
         if not output_path_str.startswith("/"):

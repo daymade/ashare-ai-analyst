@@ -146,35 +146,29 @@ class AShareConstraintChecker:
         near_limit = False
         if action in ("buy", "add") and dist_upper < 0.02:
             near_limit = True
-            warnings.append(
-                f"距涨停仅{dist_upper:.1%}，追高风险大"
-            )
+            warnings.append(f"距涨停仅{dist_upper:.1%}，追高风险大")
         if action in ("sell", "reduce") and dist_lower < 0.02:
             near_limit = True
-            warnings.append(
-                f"距跌停仅{dist_lower:.1%}，可能无法卖出"
-            )
+            warnings.append(f"距跌停仅{dist_lower:.1%}，可能无法卖出")
 
         # Confidence penalty when near limit
         if daily_change > limit_pct / 100 * 0.8:
-            warnings.append(
-                f"今日涨跌幅{daily_change:.1%}接近涨跌停，动能耗尽风险"
-            )
+            warnings.append(f"今日涨跌幅{daily_change:.1%}接近涨跌停，动能耗尽风险")
 
         # -- Liquidity check (FR-ASC003) --
         avg_volume = mkt.get("avg_volume", 0)
         if avg_volume > 0:
             # Assume we can trade up to 5% of daily volume without impact
             daily_tradeable = avg_volume * 0.05
-            days_to_exit = shares_rounded / daily_tradeable if daily_tradeable > 0 else 99
+            days_to_exit = (
+                shares_rounded / daily_tradeable if daily_tradeable > 0 else 99
+            )
         else:
             days_to_exit = 0.0  # Unknown volume → skip check
 
         liquidity_ok = days_to_exit <= self._max_days_to_exit
         if not liquidity_ok and avg_volume > 0:
-            warnings.append(
-                f"流动性不足: 预计{days_to_exit:.1f}天才能完全退出"
-            )
+            warnings.append(f"流动性不足: 预计{days_to_exit:.1f}天才能完全退出")
 
         # -- Lot size validation --
         if shares_rounded == 0 and action in ("buy", "add"):
@@ -182,7 +176,10 @@ class AShareConstraintChecker:
 
         # Min order value
         order_value = shares_rounded * price
-        min_value_ok = order_value >= self._min_order_value or action in ("sell", "reduce")
+        min_value_ok = order_value >= self._min_order_value or action in (
+            "sell",
+            "reduce",
+        )
         if not min_value_ok:
             violations.append(
                 f"订单金额¥{order_value:.0f}低于最低要求¥{self._min_order_value:.0f}"
@@ -216,9 +213,7 @@ class AShareConstraintChecker:
         Returns:
             (sellable_shares, locked_shares) — locked = bought today.
         """
-        held = next(
-            (p for p in positions if p.get("symbol") == symbol), None
-        )
+        held = next((p for p in positions if p.get("symbol") == symbol), None)
         if not held:
             return 0, 0
 

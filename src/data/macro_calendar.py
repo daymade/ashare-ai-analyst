@@ -132,9 +132,7 @@ class MacroCalendarFetcher:
             # Format B: 月份/指数 columns (PMI)
             elif "月份" in df.columns:
                 df = df.head(n_latest)
-                index_col = [
-                    c for c in df.columns if "指数" in c and "同比" not in c
-                ]
+                index_col = [c for c in df.columns if "指数" in c and "同比" not in c]
                 if index_col:
                     for _, row in df.iterrows():
                         actual = _safe_float(row.get(index_col[0]))
@@ -217,9 +215,7 @@ class MacroCalendarFetcher:
 
         # Find surprises (actual significantly different from forecast)
         surprises = [
-            r
-            for r in china + us
-            if r.surprise is not None and abs(r.surprise) > 0.1
+            r for r in china + us if r.surprise is not None and abs(r.surprise) > 0.1
         ]
         surprises.sort(key=lambda r: abs(r.surprise or 0), reverse=True)
 

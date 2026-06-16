@@ -27,8 +27,7 @@ class CircuitBreakerOpen(Exception):
         self.name = name
         self.remaining_seconds = remaining_seconds
         super().__init__(
-            f"Circuit breaker '{name}' is OPEN "
-            f"(retry in {remaining_seconds:.0f}s)"
+            f"Circuit breaker '{name}' is OPEN (retry in {remaining_seconds:.0f}s)"
         )
 
 

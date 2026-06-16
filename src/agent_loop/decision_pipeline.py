@@ -107,7 +107,11 @@ class DecisionPipeline:
 
         # Risk veto blocks actionable proposals
         if risk_veto and final_action in ("buy", "add"):
-            logger.info("Risk veto for %s: %s", signal.symbol, debate_record.get("risk_veto_reason", ""))
+            logger.info(
+                "Risk veto for %s: %s",
+                signal.symbol,
+                debate_record.get("risk_veto_reason", ""),
+            )
             return None
 
         # Confidence gate — apply adaptive calibration (Phase 5)
@@ -120,15 +124,23 @@ class DecisionPipeline:
             regime=mkt.get("regime", "unknown"),
         )
         if confidence < self._min_confidence:
-            logger.debug("Confidence %.2f below threshold for %s", confidence, signal.symbol)
+            logger.debug(
+                "Confidence %.2f below threshold for %s", confidence, signal.symbol
+            )
             return None
 
         if final_action in ("buy", "add") and confidence < self._min_buy_confidence:
-            logger.debug("Buy confidence %.2f below buy threshold for %s", confidence, signal.symbol)
+            logger.debug(
+                "Buy confidence %.2f below buy threshold for %s",
+                confidence,
+                signal.symbol,
+            )
             return None
 
         # Sector concentration check
-        signal_sector = (thesis.sector if thesis else "") or signal.metadata.get("sector", "")
+        signal_sector = (thesis.sector if thesis else "") or signal.metadata.get(
+            "sector", ""
+        )
         if final_action in ("buy", "add") and signal_sector:
             total_value = available_cash + sum(
                 p.get("market_value", 0) for p in portfolio
@@ -143,7 +155,9 @@ class DecisionPipeline:
                 if sector_pct >= self._max_sector_pct:
                     logger.info(
                         "Sector %s at %.1f%% — blocks buy for %s (limit %.0f%%)",
-                        signal_sector, sector_pct * 100, signal.symbol,
+                        signal_sector,
+                        sector_pct * 100,
+                        signal.symbol,
                         self._max_sector_pct * 100,
                     )
                     return None
@@ -162,9 +176,7 @@ class DecisionPipeline:
             return None
 
         # A-share constraint check (Phase 6)
-        total_value = available_cash + sum(
-            p.get("market_value", 0) for p in portfolio
-        )
+        total_value = available_cash + sum(p.get("market_value", 0) for p in portfolio)
         current_price = mkt.get("current_price", signal.metadata.get("entry_price", 0))
         ashare_assessment = self._constraints.assess_trade(
             symbol=signal.symbol,
@@ -249,9 +261,7 @@ class DecisionPipeline:
         available_cash: float,
     ) -> TradeProposal | None:
         """Handle CRITICAL signals (stop-loss, circuit breaker) — no debate."""
-        held = next(
-            (p for p in portfolio if p.get("symbol") == signal.symbol), None
-        )
+        held = next((p for p in portfolio if p.get("symbol") == signal.symbol), None)
         if not held:
             return None
 
@@ -346,9 +356,7 @@ class DecisionPipeline:
         if not price or price <= 0:
             return 0, ["无法获取当前价格"]
 
-        total_value = available_cash + sum(
-            p.get("market_value", 0) for p in portfolio
-        )
+        total_value = available_cash + sum(p.get("market_value", 0) for p in portfolio)
         existing_value = sum(
             p.get("market_value", 0)
             for p in portfolio
@@ -360,17 +368,13 @@ class DecisionPipeline:
         remaining = min(max_allocation - existing_value, available_cash)
 
         if remaining <= 0:
-            risk_notes.append(
-                f"仓位已达上限({self._max_position_pct:.0%})"
-            )
+            risk_notes.append(f"仓位已达上限({self._max_position_pct:.0%})")
             return 0, risk_notes
 
         # Consecutive loss penalty
         if consecutive_losses >= self._consecutive_loss_threshold:
             remaining *= self._consecutive_loss_factor
-            risk_notes.append(
-                f"连续亏损{consecutive_losses}次，仓位减半"
-            )
+            risk_notes.append(f"连续亏损{consecutive_losses}次，仓位减半")
 
         # Kelly + vol-scaling via PositionSizer
         # Map signal confidence to win_rate, use signal metadata for returns
@@ -409,17 +413,13 @@ class DecisionPipeline:
         available_cash: float,
     ) -> dict[str, Any]:
         """Compute how this trade would change portfolio composition."""
-        total_value = available_cash + sum(
-            p.get("market_value", 0) for p in portfolio
-        )
+        total_value = available_cash + sum(p.get("market_value", 0) for p in portfolio)
         if total_value <= 0:
             return {}
 
         trade_value = shares * price if price else 0
         existing_value = sum(
-            p.get("market_value", 0)
-            for p in portfolio
-            if p.get("symbol") == symbol
+            p.get("market_value", 0) for p in portfolio if p.get("symbol") == symbol
         )
 
         if action in ("buy", "add"):
@@ -430,7 +430,9 @@ class DecisionPipeline:
             new_value = existing_value
 
         weight_after = new_value / total_value if total_value > 0 else 0
-        position_count = len(portfolio) + (1 if action == "buy" and existing_value == 0 else 0)
+        position_count = len(portfolio) + (
+            1 if action == "buy" and existing_value == 0 else 0
+        )
 
         return {
             "weight_after": round(weight_after, 4),

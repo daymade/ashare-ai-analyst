@@ -2,7 +2,10 @@
 
 import pandas as pd
 
-from src.recommendation.overnight_risk import OvernightRiskCalculator, _compute_risk_score
+from src.recommendation.overnight_risk import (
+    OvernightRiskCalculator,
+    _compute_risk_score,
+)
 
 
 class TestComputeRiskScore:
@@ -54,14 +57,16 @@ class TestOvernightRiskCalculator:
         n = len(closes)
         if opens is None:
             opens = closes
-        return pd.DataFrame({
-            "date": pd.date_range("2026-01-01", periods=n),
-            "open": opens,
-            "high": [c * 1.02 for c in closes],
-            "low": [c * 0.98 for c in closes],
-            "close": closes,
-            "volume": [1000000] * n,
-        })
+        return pd.DataFrame(
+            {
+                "date": pd.date_range("2026-01-01", periods=n),
+                "open": opens,
+                "high": [c * 1.02 for c in closes],
+                "low": [c * 0.98 for c in closes],
+                "close": closes,
+                "volume": [1000000] * n,
+            }
+        )
 
     def test_basic_profile(self):
         calc = OvernightRiskCalculator()
@@ -88,7 +93,7 @@ class TestOvernightRiskCalculator:
         calc = OvernightRiskCalculator()
         # Day 3 has a 6% rally (close much higher than open)
         closes = [100, 101, 102, 108, 105, 103, 107, 104, 106, 102, 108, 105]
-        opens =  [100, 100, 101, 102, 108, 105, 103, 107, 104, 106, 102, 108]
+        opens = [100, 100, 101, 102, 108, 105, 103, 107, 104, 106, 102, 108]
         df = self._make_df(closes, opens)
         profile = calc._compute_profile("000001", df, rally_threshold=5.0)
 

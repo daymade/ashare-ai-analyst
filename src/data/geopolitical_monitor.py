@@ -102,9 +102,7 @@ class GeopoliticalMonitor:
             # else: category has no keywords — skip silently
 
         # Region keywords
-        self._regions = [
-            str(r) for r in geo_cfg.get("regions", _DEFAULT_REGIONS)
-        ]
+        self._regions = [str(r) for r in geo_cfg.get("regions", _DEFAULT_REGIONS)]
 
         total = sum(len(v) for v in self._keywords.values())
         logger.info(

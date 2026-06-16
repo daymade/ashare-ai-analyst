@@ -139,10 +139,14 @@ class TestRankAndDeduplicate:
     def test_sorted_by_priority_desc(self, agg):
         # Add signals with different urgencies
         agg.add_from_thesis_invalidation("A", "StockA", "reason1")  # HIGH
-        agg.add_from_recommendation({
-            "symbol": "B", "name": "StockB",
-            "confidence": 0.6, "reasoning": "ok",
-        })  # NORMAL
+        agg.add_from_recommendation(
+            {
+                "symbol": "B",
+                "name": "StockB",
+                "confidence": 0.6,
+                "reasoning": "ok",
+            }
+        )  # NORMAL
 
         ranked = agg.rank_and_deduplicate()
         assert len(ranked) >= 2
@@ -151,14 +155,22 @@ class TestRankAndDeduplicate:
 
     def test_dedup_merges_same_symbol_direction(self, agg):
         # Two BUY signals for the same symbol
-        agg.add_from_recommendation({
-            "symbol": "600519", "name": "贵州茅台",
-            "confidence": 0.5, "reasoning": "first",
-        })
-        agg.add_from_recommendation({
-            "symbol": "600519", "name": "贵州茅台",
-            "confidence": 0.9, "reasoning": "second",
-        })
+        agg.add_from_recommendation(
+            {
+                "symbol": "600519",
+                "name": "贵州茅台",
+                "confidence": 0.5,
+                "reasoning": "first",
+            }
+        )
+        agg.add_from_recommendation(
+            {
+                "symbol": "600519",
+                "name": "贵州茅台",
+                "confidence": 0.9,
+                "reasoning": "second",
+            }
+        )
 
         ranked = agg.rank_and_deduplicate()
         # Should be deduped to 1 signal
@@ -168,10 +180,14 @@ class TestRankAndDeduplicate:
         assert buy_signals[0].confidence == pytest.approx(0.9)
 
     def test_different_directions_not_deduped(self, agg):
-        agg.add_from_recommendation({
-            "symbol": "600519", "name": "贵州茅台",
-            "confidence": 0.7, "reasoning": "buy signal",
-        })
+        agg.add_from_recommendation(
+            {
+                "symbol": "600519",
+                "name": "贵州茅台",
+                "confidence": 0.7,
+                "reasoning": "buy signal",
+            }
+        )
         agg.add_from_thesis_invalidation("600519", "贵州茅台", "sell reason")
 
         ranked = agg.rank_and_deduplicate()
@@ -182,10 +198,14 @@ class TestRankAndDeduplicate:
 
 class TestClear:
     def test_clear_resets_buffer(self, agg):
-        agg.add_from_recommendation({
-            "symbol": "600519", "name": "贵州茅台",
-            "confidence": 0.8, "reasoning": "test",
-        })
+        agg.add_from_recommendation(
+            {
+                "symbol": "600519",
+                "name": "贵州茅台",
+                "confidence": 0.8,
+                "reasoning": "test",
+            }
+        )
         agg.clear()
         ranked = agg.rank_and_deduplicate()
         assert len(ranked) == 0
@@ -194,8 +214,12 @@ class TestClear:
 class TestComputePriorityScore:
     def test_critical_has_highest_weight(self):
         sig = AggregatedSignal(
-            symbol="X", name="X", direction=SignalDirection.SELL,
-            source="test", confidence=1.0, urgency=UrgencyTier.CRITICAL,
+            symbol="X",
+            name="X",
+            direction=SignalDirection.SELL,
+            source="test",
+            confidence=1.0,
+            urgency=UrgencyTier.CRITICAL,
             reason="test",
         )
         score = SignalAggregator.compute_priority_score(sig)
@@ -204,8 +228,12 @@ class TestComputePriorityScore:
 
     def test_low_confidence_lowers_score(self):
         sig = AggregatedSignal(
-            symbol="X", name="X", direction=SignalDirection.BUY,
-            source="test", confidence=0.1, urgency=UrgencyTier.NORMAL,
+            symbol="X",
+            name="X",
+            direction=SignalDirection.BUY,
+            source="test",
+            confidence=0.1,
+            urgency=UrgencyTier.NORMAL,
             reason="test",
         )
         score = SignalAggregator.compute_priority_score(sig)

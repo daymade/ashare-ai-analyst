@@ -190,11 +190,13 @@ class CompetitorBenchmark:
         peers: list[dict[str, str]] = []
         for stock in self._peer_groups.get(sector, []):
             if stock["symbol"] != symbol:
-                peers.append({
-                    "symbol": stock["symbol"],
-                    "name": stock["name"],
-                    "sector": sector,
-                })
+                peers.append(
+                    {
+                        "symbol": stock["symbol"],
+                        "name": stock["name"],
+                        "sector": sector,
+                    }
+                )
         return peers
 
     def compare(

@@ -170,6 +170,7 @@ class NewsFetcher:
         # Anomaly data is only available during/shortly after trading hours
         try:
             from src.utils.market_hours import is_a_share_trading_open
+
             if not is_a_share_trading_open():
                 return pd.DataFrame(columns=_ANOMALY_EMPTY_COLUMNS)
         except ImportError:

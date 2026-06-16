@@ -14,7 +14,6 @@ from typing import Any
 import akshare as ak
 import pandas as pd
 
-from src.data.fetcher import _bypass_proxy
 from src.utils.logger import get_logger
 
 logger = get_logger("data.sector_flow")

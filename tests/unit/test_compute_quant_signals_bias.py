@@ -54,9 +54,7 @@ class TestComputeQuantSignalsBias:
             bb_lower=9.0,
             bb_middle=10.0,
         )
-        result = compute_quant_signals(
-            indicators, None, None, current_price=9.2
-        )
+        result = compute_quant_signals(indicators, None, None, current_price=9.2)
         assert result["technical_score"] < 35
 
     def test_full_bullish_arrangement(self) -> None:
@@ -74,9 +72,7 @@ class TestComputeQuantSignalsBias:
             bb_lower=9.5,
             bb_middle=10.5,
         )
-        result = compute_quant_signals(
-            indicators, None, None, current_price=11.2
-        )
+        result = compute_quant_signals(indicators, None, None, current_price=11.2)
         assert result["technical_score"] > 65
 
     def test_neutral_consolidation(self) -> None:
@@ -91,9 +87,7 @@ class TestComputeQuantSignalsBias:
             macd_signal=0.0,
             macd_hist=0.0,
         )
-        result = compute_quant_signals(
-            indicators, None, None, current_price=10.0
-        )
+        result = compute_quant_signals(indicators, None, None, current_price=10.0)
         assert 40 <= result["technical_score"] <= 60
 
     def test_none_indicators(self) -> None:

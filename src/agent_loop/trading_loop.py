@@ -132,7 +132,7 @@ class AutonomousTradingLoop:
             cycle_id=cycle_id,
             timestamp=datetime.now(UTC),
             duration_seconds=round(duration, 2),
-            signals_processed=len(state.pending_signals) if 'state' in dir() else 0,
+            signals_processed=len(state.pending_signals) if "state" in dir() else 0,
             proposals_generated=proposals,
             theses_updated=0,
             theses_invalidated=0,
@@ -179,7 +179,11 @@ class AutonomousTradingLoop:
         if self._regime:
             try:
                 result = self._regime.detect()
-                regime = result.get("regime", "unknown") if isinstance(result, dict) else str(result)
+                regime = (
+                    result.get("regime", "unknown")
+                    if isinstance(result, dict)
+                    else str(result)
+                )
             except Exception as exc:
                 logger.warning("Failed to detect regime: %s", exc)
 
@@ -290,7 +294,8 @@ class AutonomousTradingLoop:
                     if sl_result:
                         # Stop-loss → CRITICAL sell (no debate)
                         self._signal_agg.add_from_stop_loss(
-                            thesis.symbol, thesis.name,
+                            thesis.symbol,
+                            thesis.name,
                             change_pct=sl_result["change_pct"],
                             stop_loss_pct=sl_result["stop_loss_pct"],
                         )
@@ -306,9 +311,7 @@ class AutonomousTradingLoop:
         if not getattr(thesis, "stop_loss_pct", None):
             return None
 
-        held = next(
-            (p for p in positions if p.get("symbol") == thesis.symbol), None
-        )
+        held = next((p for p in positions if p.get("symbol") == thesis.symbol), None)
         if not held:
             return None
 
@@ -328,9 +331,7 @@ class AutonomousTradingLoop:
         if not thesis.invalidation_conditions:
             return False
 
-        held = next(
-            (p for p in positions if p.get("symbol") == thesis.symbol), None
-        )
+        held = next((p for p in positions if p.get("symbol") == thesis.symbol), None)
         if not held:
             return False
 
@@ -384,14 +385,16 @@ class AutonomousTradingLoop:
                     logger.error("Failed to record decision: %s", exc)
 
             # In-memory log for session tracking
-            self._decision_log.append({
-                "proposal_id": proposal.proposal_id,
-                "symbol": proposal.symbol,
-                "action": proposal.action,
-                "shares": proposal.shares,
-                "confidence": proposal.confidence,
-                "timestamp": proposal.created_at.isoformat(),
-            })
+            self._decision_log.append(
+                {
+                    "proposal_id": proposal.proposal_id,
+                    "symbol": proposal.symbol,
+                    "action": proposal.action,
+                    "shares": proposal.shares,
+                    "confidence": proposal.confidence,
+                    "timestamp": proposal.created_at.isoformat(),
+                }
+            )
 
             # Push to Discord via notification dispatcher
             if self._notifier:
@@ -424,7 +427,9 @@ class AutonomousTradingLoop:
             stats = self._decision_log_store.get_accuracy_stats(lookback_days=30)
             if stats.get("total_decisions", 0) > 0:
                 accuracy = stats.get("direction_accuracy")
-                accuracy_str = f"{accuracy * 100:.0f}%" if accuracy is not None else "N/A"
+                accuracy_str = (
+                    f"{accuracy * 100:.0f}%" if accuracy is not None else "N/A"
+                )
                 avg_t3 = stats.get("avg_t3_return")
                 avg_t3_str = f"{avg_t3:.2f}%" if avg_t3 is not None else "N/A"
                 logger.info(
@@ -480,7 +485,9 @@ class AutonomousTradingLoop:
                         name = idx.get("name", "")
                         change = idx.get("change_pct", 0)
                         parts.append(f"{name} {change:+.2f}%")
-                    briefing["global_summary"] = " | ".join(parts) if parts else "暂无数据"
+                    briefing["global_summary"] = (
+                        " | ".join(parts) if parts else "暂无数据"
+                    )
             except Exception:
                 briefing["global_summary"] = "数据获取失败"
 
@@ -537,8 +544,7 @@ class AutonomousTradingLoop:
         # Today's proposals
         today = datetime.now(UTC).strftime("%Y-%m-%d")
         today_decisions = [
-            d for d in self._decision_log
-            if d.get("timestamp", "").startswith(today)
+            d for d in self._decision_log if d.get("timestamp", "").startswith(today)
         ]
         review["trades"] = today_decisions
 

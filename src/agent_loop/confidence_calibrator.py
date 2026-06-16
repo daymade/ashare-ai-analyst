@@ -191,7 +191,9 @@ class ConfidenceCalibrator:
             if accuracy >= 0.5:
                 return min(self._max_boost, (accuracy - 0.5) * self._max_boost / 0.2)
             else:
-                return max(-self._max_penalty, (accuracy - 0.5) * self._max_penalty / 0.2)
+                return max(
+                    -self._max_penalty, (accuracy - 0.5) * self._max_penalty / 0.2
+                )
 
         finally:
             conn.close()
@@ -263,21 +265,21 @@ _DEFAULT_REGIME_ADJUSTMENTS: dict[str, dict[str, float]] = {
 # Applied to position_size, stop_loss_distance, take_profit_distance
 _REGIME_STRATEGY_PARAMS: dict[str, dict[str, float]] = {
     "bull": {
-        "position_size_factor": 1.2,       # Larger positions in bull
-        "stop_loss_factor": 0.8,            # Tighter stops (trending up)
-        "take_profit_factor": 1.3,          # Let winners run
-        "max_position_pct": 0.35,           # Allow slightly larger positions
+        "position_size_factor": 1.2,  # Larger positions in bull
+        "stop_loss_factor": 0.8,  # Tighter stops (trending up)
+        "take_profit_factor": 1.3,  # Let winners run
+        "max_position_pct": 0.35,  # Allow slightly larger positions
     },
     "bear": {
-        "position_size_factor": 0.6,        # Much smaller positions
-        "stop_loss_factor": 0.7,            # Tighter stops (protect capital)
-        "take_profit_factor": 0.8,          # Take profits quickly
-        "max_position_pct": 0.20,           # Conservative position limits
+        "position_size_factor": 0.6,  # Much smaller positions
+        "stop_loss_factor": 0.7,  # Tighter stops (protect capital)
+        "take_profit_factor": 0.8,  # Take profits quickly
+        "max_position_pct": 0.20,  # Conservative position limits
     },
     "high_volatility": {
-        "position_size_factor": 0.5,        # Smallest positions
-        "stop_loss_factor": 1.5,            # Wider stops (avoid whipsaw)
-        "take_profit_factor": 1.2,          # Wider targets
+        "position_size_factor": 0.5,  # Smallest positions
+        "stop_loss_factor": 1.5,  # Wider stops (avoid whipsaw)
+        "take_profit_factor": 1.2,  # Wider targets
         "max_position_pct": 0.20,
     },
     "low_volatility": {
@@ -287,7 +289,7 @@ _REGIME_STRATEGY_PARAMS: dict[str, dict[str, float]] = {
         "max_position_pct": 0.30,
     },
     "unknown": {
-        "position_size_factor": 0.8,        # Conservative when uncertain
+        "position_size_factor": 0.8,  # Conservative when uncertain
         "stop_loss_factor": 1.0,
         "take_profit_factor": 1.0,
         "max_position_pct": 0.25,

@@ -247,9 +247,7 @@ class RealtimeQuoteManager:
 
             # Parse: var hq_str_sh600010="name,open,prev_close,price,...";
             for line in resp.text.strip().split("\n"):
-                match = re.match(
-                    r'var hq_str_([a-z]{2})(\d{6})="(.+)";', line.strip()
-                )
+                match = re.match(r'var hq_str_([a-z]{2})(\d{6})="(.+)";', line.strip())
                 if not match:
                     continue
                 sym = match.group(2)
@@ -274,9 +272,7 @@ class RealtimeQuoteManager:
                 prev = record.get("prev_close")
                 if price and prev and prev > 0:
                     record["change"] = round(price - prev, 4)
-                    record["pct_change"] = round(
-                        (price - prev) / prev * 100, 2
-                    )
+                    record["pct_change"] = round((price - prev) / prev * 100, 2)
 
                 all_results.append(record)
 

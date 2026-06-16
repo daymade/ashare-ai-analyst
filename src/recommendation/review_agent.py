@@ -176,7 +176,9 @@ class ReviewAgent:
                 style,
                 len(candidates),
             )
-            return self._fallback_recommendations(candidates, style, session, run_id=run_id)
+            return self._fallback_recommendations(
+                candidates, style, session, run_id=run_id
+            )
 
         results: list[Recommendation] = []
         # Process in batches of 5 with time budget tracking (I-074)
@@ -395,7 +397,7 @@ class ReviewAgent:
             '      "liquidity": 0.00,\n'
             '      "timing": 0.00,\n'
             '      "market_env": 0.00\n'
-            '    },\n'
+            "    },\n"
             '    "confidence": "high | medium | low",\n'
             '    "reason": "推荐/观望理由（结合子评分维度，具体引用该股数据）",\n'
             '    "risk_notes": "主要风险（含A股特殊风险如T+1隔夜、涨跌停等）",\n'

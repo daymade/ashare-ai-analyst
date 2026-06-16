@@ -609,7 +609,10 @@ class RecommendationService:
                             f"(平均收益: {wr['avg_return_t1']:+.2f}%, "
                             f"样本: {wr['count']}次)"
                         )
-                        if wr.get("win_rate_t1") is not None and wr["win_rate_t1"] < 0.4:
+                        if (
+                            wr.get("win_rate_t1") is not None
+                            and wr["win_rate_t1"] < 0.4
+                        ):
                             context += "\n  ⚠ 近期胜率偏低，请提高筛选标准"
                 except Exception:
                     pass
@@ -817,9 +820,7 @@ class RecommendationService:
                 for c in candidates[:10]:
                     if time.time() > internal_deadline:
                         break
-                    reports = self._report_store.get_reports(
-                        symbol=c.symbol, limit=1
-                    )
+                    reports = self._report_store.get_reports(symbol=c.symbol, limit=1)
                     if reports:
                         r = reports[0]
                         signal = r.get("signal", "")
@@ -841,6 +842,7 @@ class RecommendationService:
         try:
             if self._intel_chain is None:
                 from src.intelligence_hub.intel_chain import IntelChainEngine
+
                 self._intel_chain = IntelChainEngine(info_store=self._info_store)
 
             for c in candidates[:5]:

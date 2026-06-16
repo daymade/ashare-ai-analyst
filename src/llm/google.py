@@ -186,7 +186,9 @@ class GoogleProvider(BaseLLMProvider):
             # Extract token usage from response metadata
             # Note: getattr default only applies when attr is missing, not when it's None
             usage = getattr(response, "usage_metadata", None)
-            input_tokens = (getattr(usage, "prompt_token_count", 0) or 0) if usage else 0
+            input_tokens = (
+                (getattr(usage, "prompt_token_count", 0) or 0) if usage else 0
+            )
             output_tokens = (
                 (getattr(usage, "candidates_token_count", 0) or 0) if usage else 0
             )
@@ -322,7 +324,9 @@ class GoogleProvider(BaseLLMProvider):
                 raw_content = response.candidates[0].content
 
             usage = getattr(response, "usage_metadata", None)
-            input_tokens = (getattr(usage, "prompt_token_count", 0) or 0) if usage else 0
+            input_tokens = (
+                (getattr(usage, "prompt_token_count", 0) or 0) if usage else 0
+            )
             output_tokens = (
                 (getattr(usage, "candidates_token_count", 0) or 0) if usage else 0
             )

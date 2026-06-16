@@ -44,9 +44,7 @@ class IntelChainResult:
 
         parts = [f"### 情报链分析 ({self.root_symbol})"]
         for i, chain in enumerate(self.chains[:3], 1):
-            path = " → ".join(
-                f"{n.target}({n.relation})" for n in chain
-            )
+            path = " → ".join(f"{n.target}({n.relation})" for n in chain)
             parts.append(f"链路{i}: {path}")
 
         if self.summary_items:
@@ -178,8 +176,7 @@ class IntelChainEngine:
                     break
                 items = self._query_sector_intel(rel_sector, deadline)
                 unique_items = [
-                    it for it in items
-                    if it.get("title") not in seen_titles
+                    it for it in items if it.get("title") not in seen_titles
                 ]
                 for it in unique_items:
                     seen_titles.add(it.get("title", ""))
@@ -207,8 +204,7 @@ class IntelChainEngine:
                     relation = "反向关联" if is_inverse else "价格传导"
                     items = self._query_commodity_intel(commodity, deadline)
                     unique_items = [
-                        it for it in items
-                        if it.get("title") not in seen_titles
+                        it for it in items if it.get("title") not in seen_titles
                     ]
                     for it in unique_items:
                         seen_titles.add(it.get("title", ""))
@@ -231,7 +227,8 @@ class IntelChainEngine:
                                 rel_commodity, deadline
                             )
                             rel_unique = [
-                                it for it in rel_items
+                                it
+                                for it in rel_items
                                 if it.get("title") not in seen_titles
                             ]
                             for it in rel_unique:
@@ -266,8 +263,7 @@ class IntelChainEngine:
                     is_pressured = sector in pressured
                     items = self._query_macro_intel(macro_event, deadline)
                     unique_items = [
-                        it for it in items
-                        if it.get("title") not in seen_titles
+                        it for it in items if it.get("title") not in seen_titles
                     ]
                     for it in unique_items:
                         seen_titles.add(it.get("title", ""))
@@ -324,9 +320,7 @@ class IntelChainEngine:
 
         return result
 
-    def _query_sector_intel(
-        self, sector: str, deadline: float
-    ) -> list[dict]:
+    def _query_sector_intel(self, sector: str, deadline: float) -> list[dict]:
         """Query InfoStore for sector-related intel."""
         if not self._info_store or time.time() > deadline:
             return []
@@ -338,30 +332,22 @@ class IntelChainEngine:
         except Exception:
             return []
 
-    def _query_commodity_intel(
-        self, commodity: str, deadline: float
-    ) -> list[dict]:
+    def _query_commodity_intel(self, commodity: str, deadline: float) -> list[dict]:
         """Query InfoStore for commodity-related intel."""
         if not self._info_store or time.time() > deadline:
             return []
         try:
-            items = self._info_store.get_feed(
-                search=commodity, limit=3, days=3
-            )
+            items = self._info_store.get_feed(search=commodity, limit=3, days=3)
             return items or []
         except Exception:
             return []
 
-    def _query_macro_intel(
-        self, macro_event: str, deadline: float
-    ) -> list[dict]:
+    def _query_macro_intel(self, macro_event: str, deadline: float) -> list[dict]:
         """Query InfoStore for macro event intel."""
         if not self._info_store or time.time() > deadline:
             return []
         try:
-            items = self._info_store.query_by_keywords(
-                [macro_event], hours=72, limit=3
-            )
+            items = self._info_store.query_by_keywords([macro_event], hours=72, limit=3)
             return items or []
         except Exception:
             return []

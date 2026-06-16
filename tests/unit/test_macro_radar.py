@@ -115,10 +115,7 @@ class TestScanGlobalMarkets:
     def test_commodity_threshold_breach(self, service):
         """Gold +3.5% exceeds 2% threshold → signal generated."""
         signals = service.scan_global_markets()
-        gold_signals = [
-            s for s in signals
-            if "金价" in (s.summary_short or "")
-        ]
+        gold_signals = [s for s in signals if "金价" in (s.summary_short or "")]
         assert len(gold_signals) == 1
         assert gold_signals[0].signal_type == SignalType.S8_MACRO_DRIVEN
         assert gold_signals[0].producer == "macro_radar"
@@ -127,29 +124,20 @@ class TestScanGlobalMarkets:
     def test_commodity_below_threshold_no_signal(self, service):
         """Oil +1.0% below 3% threshold → no signal."""
         signals = service.scan_global_markets()
-        oil_signals = [
-            s for s in signals
-            if "原油" in (s.summary_short or "")
-        ]
+        oil_signals = [s for s in signals if "原油" in (s.summary_short or "")]
         assert len(oil_signals) == 0
 
     def test_vix_extreme(self, service):
         """VIX=30 > 25 threshold → extreme risk signal."""
         signals = service.scan_global_markets()
-        vix_signals = [
-            s for s in signals
-            if "VIX" in (s.summary_short or "")
-        ]
+        vix_signals = [s for s in signals if "VIX" in (s.summary_short or "")]
         assert len(vix_signals) == 1
         assert vix_signals[0].risk_level == RiskLevel.EXTREME
 
     def test_index_threshold_breach(self, service):
         """S&P 500 -3% exceeds 2% threshold → signal generated."""
         signals = service.scan_global_markets()
-        sp_signals = [
-            s for s in signals
-            if "标普" in (s.summary_short or "")
-        ]
+        sp_signals = [s for s in signals if "标普" in (s.summary_short or "")]
         assert len(sp_signals) == 1
 
     def test_global_fetcher_failure_returns_empty(self, service, mock_global_fetcher):
@@ -203,7 +191,9 @@ class TestScanAll:
 
 
 class TestCooldown:
-    def test_cooldown_prevents_duplicate_signals(self, config, mock_global_fetcher, mock_info_store):
+    def test_cooldown_prevents_duplicate_signals(
+        self, config, mock_global_fetcher, mock_info_store
+    ):
         """Same commodity breach should not generate duplicate signals within cooldown."""
         config["trigger_rules"]["cooldown_minutes"] = 999
         svc = MacroRadarService(

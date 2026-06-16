@@ -369,7 +369,9 @@ class TestVolumeDistributionDay:
         )
         vb = result.signals[0]
         assert vb.direction == "bearish"
-        assert "Distribution" in vb.description or "distribution" in vb.description.lower()
+        assert (
+            "Distribution" in vb.description or "distribution" in vb.description.lower()
+        )
 
     def test_accumulation_day(self, library):
         """Vol 1.5x avg + 0.5% rise → bullish accumulation day."""

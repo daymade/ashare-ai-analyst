@@ -39,14 +39,17 @@ def _make_signal(
 @pytest.fixture()
 def pipeline():
     """Pipeline with no debate engine (uses fallback scoring)."""
-    return DecisionPipeline(debate_engine=None, config={
-        "min_confidence_to_propose": 0.6,
-        "min_confidence_to_recommend_buy": 0.7,
-        "max_position_pct": 0.30,
-        "max_daily_loss_pct": 0.03,
-        "consecutive_loss_threshold": 3,
-        "consecutive_loss_size_factor": 0.5,
-    })
+    return DecisionPipeline(
+        debate_engine=None,
+        config={
+            "min_confidence_to_propose": 0.6,
+            "min_confidence_to_recommend_buy": 0.7,
+            "max_position_pct": 0.30,
+            "max_daily_loss_pct": 0.03,
+            "consecutive_loss_threshold": 3,
+            "consecutive_loss_size_factor": 0.5,
+        },
+    )
 
 
 class TestDailyLossCircuitBreaker:
@@ -175,8 +178,11 @@ class TestSizePosition:
     def test_returns_zero_for_no_price(self, pipeline):
         signal = _make_signal()
         shares, notes = pipeline._size_position(
-            signal=signal, action="buy", portfolio=[],
-            available_cash=200_000, price=None,
+            signal=signal,
+            action="buy",
+            portfolio=[],
+            available_cash=200_000,
+            price=None,
         )
         assert shares == 0
 
@@ -196,7 +202,9 @@ class TestEstimateOvernightRisk:
     def test_returns_none_for_zero_portfolio(self, pipeline):
         risk = pipeline._estimate_overnight_risk(
             symbol="600519",
-            price=1800.0, shares=100, daily_change_pct=0.02,
+            price=1800.0,
+            shares=100,
+            daily_change_pct=0.02,
             total_portfolio_value=0,
         )
         assert risk is None
@@ -204,12 +212,16 @@ class TestEstimateOvernightRisk:
     def test_penalizes_high_daily_change(self, pipeline):
         risk_normal = pipeline._estimate_overnight_risk(
             symbol="600519",
-            price=100.0, shares=1000, daily_change_pct=0.02,
+            price=100.0,
+            shares=1000,
+            daily_change_pct=0.02,
             total_portfolio_value=500_000,
         )
         risk_volatile = pipeline._estimate_overnight_risk(
             symbol="600519",
-            price=100.0, shares=1000, daily_change_pct=0.09,
+            price=100.0,
+            shares=1000,
+            daily_change_pct=0.09,
             total_portfolio_value=500_000,
         )
         assert risk_volatile > risk_normal
@@ -223,7 +235,12 @@ class TestSectorConcentration:
             metadata={"entry_price": 25.0, "sector": "白酒"},
         )
         portfolio = [
-            {"symbol": "000858", "shares": 1000, "market_value": 200_000, "sector": "白酒"},
+            {
+                "symbol": "000858",
+                "shares": 1000,
+                "market_value": 200_000,
+                "sector": "白酒",
+            },
         ]
         result = await pipeline.evaluate(
             signal=signal,
@@ -241,7 +258,12 @@ class TestSectorConcentration:
             metadata={"entry_price": 25.0, "sector": "白酒"},
         )
         portfolio = [
-            {"symbol": "000858", "shares": 100, "market_value": 10_000, "sector": "白酒"},
+            {
+                "symbol": "000858",
+                "shares": 100,
+                "market_value": 10_000,
+                "sector": "白酒",
+            },
         ]
         result = await pipeline.evaluate(
             signal=signal,

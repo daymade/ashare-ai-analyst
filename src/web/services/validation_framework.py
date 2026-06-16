@@ -385,8 +385,12 @@ class V08NumericalCrossValidation(ValidationRule):
         # Extract numbers from output text fields
         output_numbers: set[float] = set()
         text_fields = [
-            "reasoning", "analysis", "report_markdown", "executive_summary",
-            "summary", "contrarian_check",
+            "reasoning",
+            "analysis",
+            "report_markdown",
+            "executive_summary",
+            "summary",
+            "contrarian_check",
         ]
         for field_name in text_fields:
             val = data.get(field_name)
@@ -416,7 +420,11 @@ class V08NumericalCrossValidation(ValidationRule):
                         except ValueError:
                             pass
         for rw in data.get("risk_warnings", []):
-            desc = rw.get("description", "") if isinstance(rw, dict) else (rw if isinstance(rw, str) else "")
+            desc = (
+                rw.get("description", "")
+                if isinstance(rw, dict)
+                else (rw if isinstance(rw, str) else "")
+            )
             if isinstance(desc, str):
                 for match in re.findall(r"[\d]+\.?\d*", desc):
                     try:
@@ -528,7 +536,11 @@ class V10SignalTrendConsistency(ValidationRule):
             )
 
         # Check bearish arrangement: each shorter MA < longer MA
-        pairs = [(mas[i], mas[i + 1]) for i in range(3) if mas[i] is not None and mas[i + 1] is not None]
+        pairs = [
+            (mas[i], mas[i + 1])
+            for i in range(3)
+            if mas[i] is not None and mas[i + 1] is not None
+        ]
         bearish_arr = all(a < b for a, b in pairs) if pairs else False
         bullish_arr = all(a > b for a, b in pairs) if pairs else False
 
@@ -549,7 +561,8 @@ class V10SignalTrendConsistency(ValidationRule):
             precomputed["technical_score"] = 40.0
             logger.warning(
                 "V10: bearish MA arrangement but tech_score=%.1f for %s, capped to 40",
-                old, symbol,
+                old,
+                symbol,
             )
             return ValidationResult(
                 rule_id=self.rule_id,
@@ -564,7 +577,8 @@ class V10SignalTrendConsistency(ValidationRule):
             precomputed["technical_score"] = 60.0
             logger.warning(
                 "V10: bullish MA arrangement but tech_score=%.1f for %s, floored to 60",
-                old, symbol,
+                old,
+                symbol,
             )
             return ValidationResult(
                 rule_id=self.rule_id,
@@ -590,7 +604,9 @@ class V11HighConfidenceDimensionAgreement(ValidationRule):
     """
 
     rule_id = "V11"
-    description = "High confidence requires >=3 dimensions agreeing with action direction"
+    description = (
+        "High confidence requires >=3 dimensions agreeing with action direction"
+    )
 
     # Map actions to the expected bullish/bearish signal direction
     _ACTION_DIRECTION: dict[str, str] = {
@@ -648,7 +664,11 @@ class V11HighConfidenceDimensionAgreement(ValidationRule):
             logger.info(
                 "V11: confidence %.2f capped to 0.75 for %s "
                 "(only %d/%d dimensions agree with %s)",
-                conf, symbol, agreeing, len(dimensions), action,
+                conf,
+                symbol,
+                agreeing,
+                len(dimensions),
+                action,
             )
             return ValidationResult(
                 rule_id=self.rule_id,

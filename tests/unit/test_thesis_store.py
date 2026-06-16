@@ -154,7 +154,9 @@ class TestThesisStoreDecayStale:
 
         conn = sqlite3.connect(str(store._db_path))
         old_ts = (datetime.now(UTC) - timedelta(days=4)).isoformat()
-        conn.execute("UPDATE theses SET updated_at = ? WHERE symbol = ?", (old_ts, "600519"))
+        conn.execute(
+            "UPDATE theses SET updated_at = ? WHERE symbol = ?", (old_ts, "600519")
+        )
         conn.commit()
         conn.close()
 
@@ -175,7 +177,9 @@ class TestThesisStoreDecayStale:
 
         conn = sqlite3.connect(str(store._db_path))
         old_ts = (datetime.now(UTC) - timedelta(days=10)).isoformat()
-        conn.execute("UPDATE theses SET updated_at = ? WHERE symbol = ?", (old_ts, "600519"))
+        conn.execute(
+            "UPDATE theses SET updated_at = ? WHERE symbol = ?", (old_ts, "600519")
+        )
         conn.commit()
         conn.close()
 

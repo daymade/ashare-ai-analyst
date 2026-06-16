@@ -343,9 +343,7 @@ class ConceptBoardService:
             self._set_cached(cache_key, items)
         return items
 
-    def _fetch_constituents_akshare(
-        self, board_code: str
-    ) -> list[ConstituentStock]:
+    def _fetch_constituents_akshare(self, board_code: str) -> list[ConstituentStock]:
         """Fetch constituents via AKShare."""
         if self._akshare_push2_ok is False:
             return []
@@ -378,9 +376,7 @@ class ConceptBoardService:
             )
         return items
 
-    def _fetch_constituents_em_direct(
-        self, board_code: str
-    ) -> list[ConstituentStock]:
+    def _fetch_constituents_em_direct(self, board_code: str) -> list[ConstituentStock]:
         """Fallback: fetch constituents via EastMoneyClient (curl_cffi)."""
         try:
             from src.data.eastmoney_client import get_eastmoney_client

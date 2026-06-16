@@ -43,7 +43,7 @@ def _make_sina_hq_response(symbols: list[str]) -> str:
         # Fields: name,open,prev_close,price,high,low,bid,ask,volume,amount,...
         lines.append(
             f'var hq_str_{prefix}{sym}="股票{sym},10.20,10.20,10.50,10.80,10.10,'
-            f'10.45,10.50,1500000,15000000.000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'
+            f"10.45,10.50,1500000,15000000.000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"
             f'0,0,0,0,2026-02-26,15:00:00,00,";'
         )
     return "\n".join(lines)

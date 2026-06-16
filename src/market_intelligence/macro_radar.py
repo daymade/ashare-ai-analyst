@@ -41,8 +41,8 @@ class MacroRadarService:
         self._config = config or self._load_config()
         self._keyword_patterns = self._compile_keywords()
         self._cooldown_cache: dict[str, float] = {}
-        self._cooldown_minutes = (
-            self._config.get("trigger_rules", {}).get("cooldown_minutes", 60)
+        self._cooldown_minutes = self._config.get("trigger_rules", {}).get(
+            "cooldown_minutes", 60
         )
         logger.info("MacroRadarService initialized")
 
@@ -61,9 +61,7 @@ class MacroRadarService:
         for category, words in keywords_cfg.items():
             if words:
                 escaped = [re.escape(w) for w in words]
-                patterns[category] = re.compile(
-                    "|".join(escaped), re.IGNORECASE
-                )
+                patterns[category] = re.compile("|".join(escaped), re.IGNORECASE)
         return patterns
 
     def _is_cooled_down(self, key: str) -> bool:
@@ -139,8 +137,7 @@ class MacroRadarService:
                 phase=phase,
                 confidence_score=min(80.0, 50.0 + pct * 5),
                 risk_level=(
-                    RiskLevel.ELEVATED if pct >= threshold * 1.5
-                    else RiskLevel.MODERATE
+                    RiskLevel.ELEVATED if pct >= threshold * 1.5 else RiskLevel.MODERATE
                 ),
                 sources=[],
                 producer="macro_radar",
@@ -219,7 +216,8 @@ class MacroRadarService:
                 phase=phase,
                 confidence_score=min(75.0, 50.0 + abs(pct) * 3),
                 risk_level=(
-                    RiskLevel.ELEVATED if abs(pct) >= threshold * 1.5
+                    RiskLevel.ELEVATED
+                    if abs(pct) >= threshold * 1.5
                     else RiskLevel.MODERATE
                 ),
                 sources=[],
@@ -261,10 +259,7 @@ class MacroRadarService:
 
         # Filter to macro-relevant categories
         macro_categories = {"macro", "global", "policy"}
-        macro_items = [
-            it for it in items
-            if it.get("category", "") in macro_categories
-        ]
+        macro_items = [it for it in items if it.get("category", "") in macro_categories]
 
         # Match keywords per category
         matched_events: dict[str, list[dict[str, Any]]] = {}
@@ -295,18 +290,16 @@ class MacroRadarService:
             title = top_item.get("title", "")[:40]
 
             risk_level = (
-                RiskLevel.EXTREME if category == "systemic_risk"
-                else RiskLevel.ELEVATED if category == "geopolitical"
+                RiskLevel.EXTREME
+                if category == "systemic_risk"
+                else RiskLevel.ELEVATED
+                if category == "geopolitical"
                 else RiskLevel.MODERATE
             )
-            confidence = min(
-                80.0, 40.0 + len(matched_items) * 10
-            )
+            confidence = min(80.0, 40.0 + len(matched_items) * 10)
 
             summary_short = f"[{label}] {title}"[:50]
-            detail_titles = [
-                it.get("title", "")[:60] for it in matched_items[:5]
-            ]
+            detail_titles = [it.get("title", "")[:60] for it in matched_items[:5]]
 
             signal = MarketSignal(
                 signal_id=str(uuid.uuid4()),
@@ -333,9 +326,7 @@ class MacroRadarService:
     # Public entry point
     # ------------------------------------------------------------------
 
-    def scan_all(
-        self, phase: MarketPhase = MarketPhase.CLOSED
-    ) -> dict[str, int]:
+    def scan_all(self, phase: MarketPhase = MarketPhase.CLOSED) -> dict[str, int]:
         """Run all macro scans and return signal counts per category."""
         results: dict[str, int] = {"global_market": 0, "macro_intel": 0}
 

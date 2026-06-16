@@ -1179,7 +1179,6 @@ class ToolRegistry:
             handler=lambda symbol: fusion_engine.get_alpha_factors(symbol),
         )
 
-
     def _register_intelligence_tools(self, deps: dict[str, Any]) -> None:
         """Register v34.0 intelligent investment agent tools."""
 

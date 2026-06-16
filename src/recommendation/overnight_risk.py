@@ -28,7 +28,9 @@ class OvernightRiskProfile:
     gap_down_ratio: float  # Fraction of days with negative gap
 
     # Post-rally drawdown (after big intraday gains)
-    post_rally_drawdown_prob: float  # P(next day close < today close | today gain > threshold)
+    post_rally_drawdown_prob: (
+        float  # P(next day close < today close | today gain > threshold)
+    )
     post_rally_avg_return: float  # Average next-day return after rally
     rally_sample_size: int  # Number of rally days in sample
 
@@ -44,11 +46,13 @@ class OvernightRiskProfile:
             f"  隔夜跳空为负概率: {self.gap_down_ratio:.0%}",
         ]
         if self.rally_sample_size > 0:
-            parts.extend([
-                f"  大涨后次日回调概率: {self.post_rally_drawdown_prob:.0%} "
-                f"(样本={self.rally_sample_size}天)",
-                f"  大涨后次日平均收益: {self.post_rally_avg_return:+.2f}%",
-            ])
+            parts.extend(
+                [
+                    f"  大涨后次日回调概率: {self.post_rally_drawdown_prob:.0%} "
+                    f"(样本={self.rally_sample_size}天)",
+                    f"  大涨后次日平均收益: {self.post_rally_avg_return:+.2f}%",
+                ]
+            )
         parts.append(f"  综合隔夜风险评分: {self.risk_score:.2f}/1.00")
         return "\n".join(parts)
 
@@ -123,9 +127,14 @@ class OvernightRiskCalculator:
         if not gaps:
             return OvernightRiskProfile(
                 symbol=symbol,
-                avg_gap_pct=0, std_gap_pct=0, max_negative_gap_pct=0,
-                gap_down_ratio=0, post_rally_drawdown_prob=0,
-                post_rally_avg_return=0, rally_sample_size=0, risk_score=0.5,
+                avg_gap_pct=0,
+                std_gap_pct=0,
+                max_negative_gap_pct=0,
+                gap_down_ratio=0,
+                post_rally_drawdown_prob=0,
+                post_rally_avg_return=0,
+                rally_sample_size=0,
+                risk_score=0.5,
             )
 
         avg_gap = sum(gaps) / len(gaps)
@@ -154,7 +163,9 @@ class OvernightRiskCalculator:
                     rally_next_returns.append(next_return)
 
         if rally_next_returns:
-            drawdown_prob = sum(1 for r in rally_next_returns if r < 0) / len(rally_next_returns)
+            drawdown_prob = sum(1 for r in rally_next_returns if r < 0) / len(
+                rally_next_returns
+            )
             avg_post_rally = sum(rally_next_returns) / len(rally_next_returns)
         else:
             drawdown_prob = 0.5  # No data, assume neutral
@@ -187,6 +198,7 @@ class OvernightRiskCalculator:
         if self._fetcher is None:
             try:
                 from src.data.fetcher import StockDataFetcher
+
                 self._fetcher = StockDataFetcher()
             except Exception as exc:
                 logger.warning("Cannot create StockDataFetcher: %s", exc)
@@ -194,6 +206,7 @@ class OvernightRiskCalculator:
 
         try:
             from datetime import datetime, timedelta
+
             end = datetime.now().strftime("%Y%m%d")
             start = (datetime.now() - timedelta(days=days + 30)).strftime("%Y%m%d")
             df = self._fetcher.fetch_daily_ohlcv(symbol, start_date=start, end_date=end)
@@ -227,11 +240,8 @@ def _compute_risk_score(
     vol_risk = min(1.0, std_gap / 3.0)  # 3% std = max risk
     drawdown_risk = min(1.0, drawdown_prob) if rally_sample_size >= 3 else 0.5
     # Negative post-rally return = high risk
-    return_risk = min(1.0, max(0, 0.5 - avg_post_rally / 10)) if rally_sample_size >= 3 else 0.5
-
-    return (
-        gap_risk * 0.30
-        + vol_risk * 0.20
-        + drawdown_risk * 0.30
-        + return_risk * 0.20
+    return_risk = (
+        min(1.0, max(0, 0.5 - avg_post_rally / 10)) if rally_sample_size >= 3 else 0.5
     )
+
+    return gap_risk * 0.30 + vol_risk * 0.20 + drawdown_risk * 0.30 + return_risk * 0.20

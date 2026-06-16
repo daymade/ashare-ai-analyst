@@ -75,7 +75,9 @@ class TestAssessTrade:
         assert result.price_limit_pct == 20.0
         assert result.overnight_max_loss_pct == 0.20
 
-    def test_star_market_has_20_pct_limit(self, checker: AShareConstraintChecker) -> None:
+    def test_star_market_has_20_pct_limit(
+        self, checker: AShareConstraintChecker
+    ) -> None:
         result = checker.assess_trade(
             symbol="688981",
             action="buy",
@@ -85,7 +87,9 @@ class TestAssessTrade:
         )
         assert result.price_limit_pct == 20.0
 
-    def test_insufficient_shares_not_tradeable(self, checker: AShareConstraintChecker) -> None:
+    def test_insufficient_shares_not_tradeable(
+        self, checker: AShareConstraintChecker
+    ) -> None:
         result = checker.assess_trade(
             symbol="600519",
             action="buy",
@@ -132,9 +136,7 @@ class TestAssessTrade:
         assert result.shares_rounded == 73
 
     def test_overnight_risk_budget_warning(self) -> None:
-        checker = AShareConstraintChecker(
-            config={"overnight_risk_budget_pct": 0.02}
-        )
+        checker = AShareConstraintChecker(config={"overnight_risk_budget_pct": 0.02})
         result = checker.assess_trade(
             symbol="600519",
             action="buy",
@@ -173,7 +175,9 @@ class TestAssessTrade:
 class TestT1Sellable:
     """T+1 settlement check."""
 
-    def test_all_sellable_no_today_bought(self, checker: AShareConstraintChecker) -> None:
+    def test_all_sellable_no_today_bought(
+        self, checker: AShareConstraintChecker
+    ) -> None:
         positions = [{"symbol": "600519", "shares": 500, "today_bought": 0}]
         sellable, locked = checker.check_t1_sellable("600519", positions)
         assert sellable == 500
@@ -195,7 +199,9 @@ class TestT1Sellable:
 class TestAdjustSharesForLiquidity:
     """Liquidity-based share adjustment."""
 
-    def test_reduces_shares_for_low_volume(self, checker: AShareConstraintChecker) -> None:
+    def test_reduces_shares_for_low_volume(
+        self, checker: AShareConstraintChecker
+    ) -> None:
         adjusted = checker.adjust_shares_for_liquidity(
             shares=10000,
             symbol="600519",
@@ -205,7 +211,9 @@ class TestAdjustSharesForLiquidity:
         # Max: 1000 * 0.05 * 2 = 100 shares
         assert adjusted == 100
 
-    def test_no_reduction_for_high_volume(self, checker: AShareConstraintChecker) -> None:
+    def test_no_reduction_for_high_volume(
+        self, checker: AShareConstraintChecker
+    ) -> None:
         adjusted = checker.adjust_shares_for_liquidity(
             shares=1000,
             symbol="600519",

@@ -65,16 +65,12 @@ class TestIntelChainEngine:
 
         engine = self._make_engine(info_store=mock_store)
         # Set deadline in the past
-        result = engine.trace(
-            "000001", sector="银行", deadline=time.time() - 1
-        )
+        result = engine.trace("000001", sector="银行", deadline=time.time() - 1)
         # Should return quickly with empty/partial results
         assert isinstance(result, IntelChainResult)
 
     def test_to_context_str_empty(self):
-        result = IntelChainResult(
-            root_symbol="000001", chains=[], summary_items=[]
-        )
+        result = IntelChainResult(root_symbol="000001", chains=[], summary_items=[])
         assert result.to_context_str() == ""
 
     def test_to_context_str_with_chains(self):

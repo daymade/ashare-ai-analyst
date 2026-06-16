@@ -181,7 +181,9 @@ class PositionMacroProfile:
         """Return the macro factor with highest absolute sensitivity."""
         if not self.macro_sensitivities:
             return "—"
-        return max(self.macro_sensitivities, key=lambda k: abs(self.macro_sensitivities[k]))
+        return max(
+            self.macro_sensitivities, key=lambda k: abs(self.macro_sensitivities[k])
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
