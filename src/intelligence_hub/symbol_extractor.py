@@ -166,7 +166,9 @@ class SymbolExtractor:
                     self._save_cache(names)
             except Exception as exc:
                 logger.warning("SymbolExtractor: akshare load failed: %s", exc)
-                # Fallback to local cache
+
+            # Fallback to local cache if akshare yielded nothing
+            if not names:
                 cached = self._load_cache()
                 if cached:
                     names = cached
