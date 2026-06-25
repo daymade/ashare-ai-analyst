@@ -105,6 +105,15 @@ src/web/ FastAPI  ·  frontend/ React SPA  ·  src/discord_bot/  ·  openclaw/ C
 - 至少一个 LLM API Key（Anthropic / Google / OpenAI）
 - （可选）Discord Bot Token，用于推送通知
 
+### 主机依赖 / Host prerequisites
+
+如果你使用 `make up` 启动 Docker Compose 全栈，宿主机需要额外运行两个服务：
+
+- **HTTP 代理** `http://host.docker.internal:6152` — 用于容器内访问外网（PyPI / API）
+- **Claude Code bridge** `http://host.docker.internal:19821` — LLM 网关的 fallback 路由
+
+> 这两个端口由你本地环境提供，不在 Docker Compose 内。启动前请确认代理与 bridge 已运行。
+
 ### 1. 克隆并配置环境变量 / Clone & configure
 
 ```bash

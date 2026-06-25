@@ -197,7 +197,7 @@ class TradingCalendar:
     def _load_trading_dates(self) -> set[date]:
         """Load trading dates via akshare → adata fallback chain."""
         current_year = date.today().year
-        years = [current_year - 1, current_year, current_year + 1]
+        years = [current_year - 1, current_year]
 
         # Primary: akshare (EastMoney index history — real exchange data)
         dates, covered = _load_akshare_trading_dates(years)
