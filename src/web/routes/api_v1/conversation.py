@@ -59,7 +59,7 @@ async def conversation(
             )
             return result
         except Exception:
-            logger.exception("Conversation followup failed for %s", symbol)
+            logger.exception("Conversation followup failed for %r", symbol)
             return {
                 "status": "error",
                 "session_id": session_id or "",
@@ -193,7 +193,7 @@ async def conversation(
         return result
 
     except Exception:
-        logger.exception("Conversation start failed for %s", symbol)
+        logger.exception("Conversation start failed for %r", symbol)
         return {
             "status": "error",
             "session_id": "",

@@ -263,7 +263,7 @@ class AiNewsItem:
     source_id: str
     source_name: str
     category: str  # official | research | community | github | search
-    published_at: datetime
+    published_at: datetime | None
     icon: str = ""
     tags: list[str] = field(default_factory=list)
 
@@ -275,7 +275,9 @@ class AiNewsItem:
             "source_id": self.source_id,
             "source_name": self.source_name,
             "category": self.category,
-            "published_at": self.published_at.isoformat(),
+            "published_at": self.published_at.isoformat()
+            if self.published_at
+            else None,
             "icon": self.icon,
             "tags": self.tags,
         }
@@ -291,10 +293,10 @@ def _strip_html(text: str) -> str:
     return clean.strip()
 
 
-def _parse_datetime(text: str | None) -> datetime:
+def _parse_datetime(text: str | None) -> datetime | None:
     """Best-effort datetime parsing from RSS/Atom date strings."""
     if not text:
-        return datetime.now(tz=timezone.utc)
+        return None
     text = text.strip()
     # RFC 2822 (RSS pubDate)
     try:
@@ -307,10 +309,10 @@ def _parse_datetime(text: str | None) -> datetime:
             dt = datetime.strptime(text, fmt)
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=timezone.utc)
-            return dt
+            return dt.astimezone(timezone.utc)
         except ValueError:
             continue
-    return datetime.now(tz=timezone.utc)
+    return None
 
 
 def _find_text(el: ET.Element, path: str) -> str:
@@ -343,6 +345,7 @@ class AiNewsAggregator:
         self._sources = sources or AI_NEWS_SOURCES
         self._session = create_session(timeout=_FETCH_TIMEOUT, retries=2)
         self._cache: dict[str, tuple[float, list[AiNewsItem]]] = {}
+        self._fetch_status: dict[str, dict[str, str | None]] = {}
         self._circuits: dict[str, CircuitBreaker] = {}
         # Build a combined source list (RSS + GitHub + SearXNG)
         self._all_source_ids: list[dict[str, str]] = []
@@ -392,6 +395,13 @@ class AiNewsAggregator:
             if time.time() < expire_ts:
                 return items
         return None
+
+    def invalidate_cache(self, source_id: str | None = None) -> None:
+        """Allow explicit refreshes to recheck the upstream source immediately."""
+        if source_id:
+            self._cache.pop(source_id, None)
+        else:
+            self._cache.clear()
 
     def _set_cache(self, key: str, items: list[AiNewsItem]) -> None:
         self._cache[key] = (time.time() + _CACHE_TTL, items)
@@ -502,6 +512,7 @@ class AiNewsAggregator:
     def _fetch_github_releases(self) -> list[AiNewsItem]:
         """Fetch latest releases from top AI repos via GitHub API."""
         items: list[AiNewsItem] = []
+        successful_requests = 0
         for repo in _GITHUB_AI_REPOS:
             try:
                 resp = self._session.get(
@@ -521,6 +532,7 @@ class AiNewsAggregator:
                 releases = resp.json()
                 if not isinstance(releases, list):
                     continue
+                successful_requests += 1
                 for rel in releases[:3]:
                     tag = rel.get("tag_name", "")
                     name = rel.get("name") or tag
@@ -545,6 +557,8 @@ class AiNewsAggregator:
                 time.sleep(0.2)
             except Exception:
                 logger.debug("GitHub release fetch failed for %s", repo, exc_info=True)
+        if not successful_requests:
+            raise RuntimeError("GitHub releases unavailable")
         return items
 
     # ── SearXNG search fetcher ───────────────────────────────────────
@@ -596,6 +610,7 @@ class AiNewsAggregator:
             logger.exception(
                 "SearXNG fetch failed for %s", query_config.get("id", "unknown")
             )
+            raise
         return items
 
     # ── Unified fetch dispatch ───────────────────────────────────────
@@ -628,6 +643,7 @@ class AiNewsAggregator:
             def fetcher_fn() -> list[AiNewsItem]:
                 resp = self._session.get(
                     source["url"],
+                    timeout=_FETCH_TIMEOUT,
                     headers={
                         "User-Agent": "AINewsAggregator/1.0 (+https://github.com)",
                         "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml",
@@ -635,6 +651,8 @@ class AiNewsAggregator:
                 )
                 resp.raise_for_status()
                 xml_text = resp.text
+                # Invalid XML is a fetch failure, not an empty successful feed.
+                ET.fromstring(xml_text)
 
                 if source.get("format") == "atom":
                     result = self._parse_atom(xml_text, source)
@@ -651,13 +669,28 @@ class AiNewsAggregator:
                 items = fetcher_fn()
 
             self._set_cache(source_id, items)
+            self._fetch_status[source_id] = {
+                "last_attempt": datetime.now(timezone.utc).isoformat(),
+                "status": "ok",
+                "error": None,
+            }
             logger.info("Fetched %d items from %s", len(items), source_id)
             return items
 
         except CircuitBreakerOpen:
+            self._fetch_status[source_id] = {
+                "last_attempt": datetime.now(timezone.utc).isoformat(),
+                "status": "error",
+                "error": "连接连续失败，稍后重试",
+            }
             logger.debug("Circuit open for %s, skipping", source_id)
             return []
         except Exception:
+            self._fetch_status[source_id] = {
+                "last_attempt": datetime.now(timezone.utc).isoformat(),
+                "status": "error",
+                "error": "信息源请求失败",
+            }
             logger.exception("Failed to fetch AI news from %s", source_id)
             return []
 
@@ -676,7 +709,10 @@ class AiNewsAggregator:
                     logger.warning("Parallel fetch failed for %s", sid)
 
         # Sort by published date descending
-        all_items.sort(key=lambda x: x.published_at, reverse=True)
+        all_items.sort(
+            key=lambda x: x.published_at or datetime.min.replace(tzinfo=timezone.utc),
+            reverse=True,
+        )
         return all_items
 
     def fetch_by_category(
@@ -696,7 +732,10 @@ class AiNewsAggregator:
                     items.extend(fetched[:limit_per_source])
                 except Exception:
                     logger.warning("Parallel fetch failed for %s", sid)
-        items.sort(key=lambda x: x.published_at, reverse=True)
+        items.sort(
+            key=lambda x: x.published_at or datetime.min.replace(tzinfo=timezone.utc),
+            reverse=True,
+        )
         return items
 
     def get_source_status(self) -> list[dict[str, Any]]:
@@ -715,6 +754,7 @@ class AiNewsAggregator:
                     "url": source.get("url", ""),
                     "cached_count": len(cached) if cached else 0,
                     "circuit_open": bool(cb and cb.state == "open"),
+                    **self._fetch_status.get(sid, {"status": "not_fetched"}),
                 }
             )
         return statuses

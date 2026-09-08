@@ -433,7 +433,6 @@ class DecisionPipeline:
 
         # --- UST: Bayesian prescreen (cheap, before expensive debate) ---
         is_buy = signal.direction.value.lower() in ("buy", "add")
-        prescreen_p = 1.0
         if is_buy:
             prescreen_p = self._bayesian_prescreen(
                 signal, thesis, mkt, portfolio, available_cash

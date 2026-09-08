@@ -345,3 +345,9 @@ class TestClearCache:
         assert len(quote_manager._cache) > 0
         quote_manager.clear_cache()
         assert len(quote_manager._cache) == 0
+
+
+def test_sina_quote_preserves_provider_timestamp(quote_manager):
+    quote = quote_manager.get_single_quote("000001")
+    assert quote["date"] == "2026-02-26T15:00:00+08:00"
+    assert quote["source"] == "sina"

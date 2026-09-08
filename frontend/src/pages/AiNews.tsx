@@ -39,7 +39,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   search: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
 }
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string | null): string {
+  if (!dateStr) return "发布时间未知"
   const now = Date.now()
   const date = new Date(dateStr).getTime()
   const diff = now - date
@@ -74,7 +75,7 @@ function NewsCard({ item }: { item: AiNewsItem }) {
             >
               {item.category}
             </Badge>
-            <span className="text-xs text-muted-foreground ml-auto shrink-0">
+            <span title={item.published_at ?? "来源未提供发布时间"} className="text-xs text-muted-foreground ml-auto shrink-0">
               {timeAgo(item.published_at)}
             </span>
           </div>
@@ -114,7 +115,7 @@ export default function AiNews() {
   const [sourceFilter, setSourceFilter] = useState<string | undefined>()
   const [page, setPage] = useState(0)
 
-  const { data, isLoading, isFetching } = useAiNews({
+  const { data, isLoading, isFetching, error, refetch } = useAiNews({
     category: category === "all" ? undefined : category,
     source: sourceFilter,
     search: search || undefined,
@@ -126,15 +127,19 @@ export default function AiNews() {
   const refreshMutation = useRefreshAiNews()
 
   const handleRefresh = useCallback(() => {
-    refreshMutation.mutate(undefined, {
+    refreshMutation.mutate(sourceFilter, {
       onSuccess: (result) => {
-        toast.success(`已刷新，获取 ${result.new_items} 条新资讯`)
+        if (result.failed_sources?.length) {
+          toast.warning(`新增 ${result.new_items} 条；${result.failed_sources.join("、")}连接失败`)
+        } else {
+          toast.success(`已刷新，新增 ${result.new_items} 条资讯`)
+        }
       },
       onError: () => {
         toast.error("刷新失败，请稍后重试")
       },
     })
-  }, [refreshMutation])
+  }, [refreshMutation, sourceFilter])
 
   const handleSearch = useCallback(() => {
     setSearch(searchInput)
@@ -151,7 +156,7 @@ export default function AiNews() {
           <div>
             <h1 className="text-lg font-bold">AI 全球资讯</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              汇聚 {sources?.length || 0} 个顶级 AI 信息源 · 实时追踪行业动态
+              官方博客、研究论文与社区动态 · 按原文发布时间排序
             </p>
           </div>
           <Button
@@ -241,9 +246,7 @@ export default function AiNews() {
               <span className="text-[10px] text-muted-foreground/60">
                 ({s.article_count})
               </span>
-              {s.circuit_open && (
-                <span className="h-1.5 w-1.5 rounded-full bg-destructive" title="连接异常" />
-              )}
+              {s.status === "error" ? <span className="text-destructive">连接失败</span> : s.status === "not_fetched" && <span>未同步</span>}
             </button>
           ))}
         </div>
@@ -251,6 +254,8 @@ export default function AiNews() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
+        {refreshMutation.isError && <div role="alert" className="mb-4 rounded border border-destructive/30 p-3 text-sm text-destructive">同步失败：{refreshMutation.error.message}。已有资讯仍可阅读，点击刷新可重试。</div>}
+        {error && <div role="alert" className="mb-4 flex items-center justify-between rounded border border-destructive/30 p-3 text-sm text-destructive"><span>资讯加载失败：{error.message}</span><Button variant="outline" size="sm" onClick={() => void refetch()}>重新加载</Button></div>}
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 8 }).map((_, i) => (

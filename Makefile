@@ -2,6 +2,10 @@
 
 PYTHON ?= $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 
+.PHONY: dev
+dev:
+	$(PYTHON) scripts/dev.py
+
 # ============================================================
 # Docker Compose 管理脚本
 # ============================================================

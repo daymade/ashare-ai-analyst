@@ -428,3 +428,22 @@ class TestBackwardCompat:
         with patch("src.data.eastmoney_client.load_config") as mock_cfg:
             mock_cfg.return_value = {"data_sources": {}}
             assert init_proxy_patch() is True
+
+
+def test_gateway_auth_rejection_is_cooled_down():
+    client = EastMoneyClient(token="test-token", mode="gateway")
+    client._session = MagicMock()
+    client._session.get.return_value = _make_response({"error_msg": "invalid token"})
+    assert client._get_auth_config() is None
+    assert client._get_auth_config() is None
+    assert client._session.get.call_count == 1
+
+
+def test_client_session_is_not_replaced_by_proxy_sdk():
+    from curl_cffi.requests.session import Session
+
+    client = EastMoneyClient()
+    with patch("curl_cffi.requests.Session") as patched:
+        assert isinstance(client._get_session(), Session)
+        patched.assert_not_called()
+    client.close()

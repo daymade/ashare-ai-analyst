@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from fastapi import APIRouter, Depends, Query
 
 from src.web.dependencies import get_ai_news_service
@@ -81,6 +82,11 @@ async def refresh_news(
     svc: AiNewsService = Depends(get_ai_news_service),
 ) -> dict:
     """Trigger a manual refresh of AI news sources."""
-    results = svc.refresh(source_id=source)
+    results = await asyncio.to_thread(svc.refresh, source_id=source)
     total = sum(results.values())
-    return {"new_items": total, "by_source": results}
+    failed = [
+        s["source_name"]
+        for s in svc.get_source_stats()
+        if s.get("status") == "error" and (not source or s["source_id"] == source)
+    ]
+    return {"new_items": total, "by_source": results, "failed_sources": failed}

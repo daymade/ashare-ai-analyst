@@ -100,7 +100,7 @@ async def get_watchlist(
     # Batch fetch realtime quotes (1 call instead of N)
     quotes_map: dict[str, dict] = {}
     try:
-        manager = RealtimeQuoteManager()
+        manager = get_realtime_quote_manager()
         df = await asyncio.to_thread(manager.get_quotes, symbols)
         for rec in df.to_dict(orient="records"):
             sym = rec.get("symbol", "")
@@ -115,6 +115,8 @@ async def get_watchlist(
         if quote:
             info = {
                 "close": quote.get("price"),
+                "date": quote.get("date"),
+                "source": quote.get("source", "eastmoney"),
                 "open": quote.get("open"),
                 "high": quote.get("high"),
                 "low": quote.get("low"),

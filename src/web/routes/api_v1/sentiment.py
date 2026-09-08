@@ -115,7 +115,7 @@ async def get_cross_market_analysis(
         result = await asyncio.to_thread(svc.get_cross_market_analysis, symbol)
         return result
     except Exception:
-        logger.exception("Cross-market analysis failed for %s", symbol)
+        logger.exception("Cross-market analysis failed for %r", symbol)
         return {
             "symbol": symbol,
             "combined_impact_score": 0.0,

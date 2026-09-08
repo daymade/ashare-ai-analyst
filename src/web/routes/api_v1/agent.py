@@ -199,7 +199,7 @@ async def get_ai_analysis(
         )
         return result
     except Exception as exc:
-        logger.exception("AI analysis failed for %s", symbol)
+        logger.exception("AI analysis failed for %r", symbol)
         return {
             "status": "error",
             "symbol": symbol,
@@ -302,7 +302,7 @@ async def get_unified_analysis(
 
         return result
     except Exception:
-        logger.exception("Unified analysis failed for %s", symbol)
+        logger.exception("Unified analysis failed for %r", symbol)
         return {
             "status": "error",
             "symbol": symbol,
@@ -369,7 +369,7 @@ async def get_quick_insight(
         )
         return result
     except Exception:
-        logger.exception("Quick insight failed for %s", symbol)
+        logger.exception("Quick insight failed for %r", symbol)
         return {
             "symbol": symbol,
             "signal": "neutral",
@@ -407,7 +407,7 @@ async def trigger_fresh_analysis(
         )
         return result
     except Exception as exc:
-        logger.exception("Fresh analysis failed for %s", symbol)
+        logger.exception("Fresh analysis failed for %r", symbol)
         return {
             "status": "error",
             "symbol": symbol,
@@ -451,13 +451,13 @@ async def get_stock_alerts(
     try:
         indicators = await asyncio.to_thread(svc.get_indicators_summary, symbol)
     except Exception:
-        logger.warning("Optional data fetch failed for %s", symbol)
+        logger.warning("Optional data fetch failed for %r", symbol)
 
     ohlcv_df = None
     try:
         ohlcv_df = await asyncio.to_thread(svc.get_stock_data, symbol)
     except Exception:
-        logger.warning("Optional data fetch failed for %s", symbol)
+        logger.warning("Optional data fetch failed for %r", symbol)
 
     alerts = await asyncio.to_thread(
         alert_engine.check_alerts,
@@ -542,7 +542,7 @@ async def analyze_stock_move(
         )
         return result
     except Exception as exc:
-        logger.exception("Move analysis failed for %s", symbol)
+        logger.exception("Move analysis failed for %r", symbol)
         return {
             "status": "error",
             "symbol": symbol,
@@ -578,7 +578,7 @@ async def get_dragon_tiger_ai(
     try:
         indicators = await asyncio.to_thread(svc.get_indicators_summary, symbol)
     except Exception:
-        logger.warning("Optional data fetch failed for %s", symbol)
+        logger.warning("Optional data fetch failed for %r", symbol)
 
     # Fetch dragon tiger data
     seats_df = await asyncio.to_thread(svc.fetcher.fetch_dragon_tiger_seats, symbol)
@@ -605,7 +605,7 @@ async def get_dragon_tiger_ai(
         )
         return result
     except Exception as exc:
-        logger.exception("Dragon tiger AI failed for %s", symbol)
+        logger.exception("Dragon tiger AI failed for %r", symbol)
         return {
             "status": "error",
             "symbol": symbol,
@@ -718,7 +718,7 @@ async def get_chart_events(
                     }
                 )
     except Exception:
-        logger.warning("Optional data fetch failed for %s", symbol)
+        logger.warning("Optional data fetch failed for %r", symbol)
 
     # Dragon tiger events
     try:
@@ -765,7 +765,7 @@ async def get_chart_events(
                     }
                 )
     except Exception:
-        logger.warning("Optional data fetch failed for %s", symbol)
+        logger.warning("Optional data fetch failed for %r", symbol)
 
     # Anomaly events — datetime may be time-only (e.g. "09:37:09"), prepend today
     today_str = datetime.now().strftime("%Y-%m-%d")
@@ -794,7 +794,7 @@ async def get_chart_events(
                     }
                 )
     except Exception:
-        logger.warning("Optional data fetch failed for %s", symbol)
+        logger.warning("Optional data fetch failed for %r", symbol)
 
     # Pattern events (from OHLCV data) — limited to recent 30 days to reduce noise
     try:
@@ -817,6 +817,6 @@ async def get_chart_events(
                             }
                         )
     except Exception:
-        logger.warning("Optional data fetch failed for %s", symbol)
+        logger.warning("Optional data fetch failed for %r", symbol)
 
     return {"symbol": symbol, "events": events}

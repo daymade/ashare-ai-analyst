@@ -204,6 +204,8 @@ class RealtimeQuoteManager:
 
                 if result:
                     self._source_router.record_success(source)
+                    for record in result:
+                        record.setdefault("source", source.value)
                     return result
             except Exception as exc:
                 logger.warning("Source %s failed: %s", source.value, exc)
@@ -301,7 +303,9 @@ class RealtimeQuoteManager:
                 if len(fields) < 10 or not fields[3]:
                     continue  # empty quote (suspended etc.)
 
-                record: dict[str, Any] = {"symbol": sym}
+                record: dict[str, Any] = {"symbol": sym, "source": "sina"}
+                if len(fields) > 31 and fields[30] and fields[31]:
+                    record["date"] = f"{fields[30]}T{fields[31]}+08:00"
                 for idx, key in _SINA_HQ_FIELDS.items():
                     if idx < len(fields):
                         val = fields[idx]

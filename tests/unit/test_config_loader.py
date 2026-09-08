@@ -198,3 +198,47 @@ class TestGetDataDir:
 
         assert result.name == "raw"
         assert result.parent.name == "data"
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "../outside",
+        "/tmp/outside",
+        "stocks\n",
+        "stocks\x00",
+        "%2e%2e%2foutside",
+        "stocks.yaml",
+    ],
+)
+def test_config_rejects_non_identifiers(name):
+    from src.utils.config import load_config, save_config
+
+    with pytest.raises(ValueError):
+        load_config(name)
+    with pytest.raises(ValueError):
+        save_config(name, {})
+
+
+def test_config_rejects_symlink_outside_config(tmp_path):
+    from src.utils.config import load_config, save_config
+
+    (tmp_path / "config").mkdir()
+    outside = tmp_path / "outside.yaml"
+    outside.write_text("private: true\n")
+    (tmp_path / "config/alias.yaml").symlink_to(outside)
+    with patch("src.utils.config.get_project_root", return_value=tmp_path):
+        with pytest.raises(ValueError):
+            load_config("alias")
+        with pytest.raises(ValueError):
+            save_config("alias", {})
+    assert outside.read_text() == "private: true\n"
+
+
+def test_config_lowercase_underscore_digit_roundtrip(tmp_path):
+    from src.utils.config import load_config, save_config
+
+    (tmp_path / "config").mkdir()
+    with patch("src.utils.config.get_project_root", return_value=tmp_path):
+        save_config("alpha_v2", {"enabled": True})
+        assert load_config("alpha_v2") == {"enabled": True}

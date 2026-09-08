@@ -57,8 +57,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/api/v1": {
-        target: "http://localhost:8000",
-        changeOrigin: true,
+        target: "http://127.0.0.1:8000",
+        // Keep redirects on the browser's origin, including non-default dev ports.
+        changeOrigin: false,
         timeout: 180000, // 3 min — LLM endpoints can take 30-120s+
       },
     },
