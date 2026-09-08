@@ -28,13 +28,12 @@ export interface ExecutionPlan {
 }
 
 export interface RegimeState {
-  sentiment: {
-    phase: string
-    phase_cn: string
-    position_limits: { max_position_pct: number; max_equity_pct: number }
-  }
-  hmm: { state: string; probability: number }
-  risk_budget: { daily_limit_pct: number; used_pct: number; remaining_pct: number }
+  sentiment_phase: string
+  sentiment_phase_cn: string
+  hmm_state: string
+  hmm_probability: number | null
+  risk_budget_remaining: number | null
+  updated_at: string | null
 }
 
 export interface BootstrapData {

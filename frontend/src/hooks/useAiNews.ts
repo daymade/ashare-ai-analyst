@@ -21,6 +21,7 @@ export function useAiNews(params?: {
     queryKey: ["ai-news", params],
     queryFn: () => fetchAiNews(params),
     staleTime: 60_000,
+    retry: 1,
     refetchInterval: 5 * 60_000, // 5min auto-refresh
   })
 }

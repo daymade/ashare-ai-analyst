@@ -42,7 +42,7 @@ An LLM-powered intelligent analysis platform for the A-share (Chinese stock) mar
 | 🌊 事件总线 | Redis Streams 事件驱动微 OODA（行情 / 新闻 / 情绪 / 信号） | Event Bus | Redis-Streams event-driven micro-OODA (market / news / sentiment / signal) |
 | 🛡️ 风险引擎 | 熔断器 + Kelly 仓位 + VaR + A股约束（T+1 / 涨跌停 / 100 股） | Risk Engine | circuit breaker + Kelly sizing + VaR + A-share constraints (T+1 / price limits / 100-share lots) |
 | 🌐 全球情报 + 新闻 | 全球指数 / 大宗 / 汇率关联 + AI 新闻聚合 | Global Intel + News | global indices / commodities / FX correlation + AI news aggregation |
-| 📈 量化回测 | backtrader 策略回测，可选 Qlib Alpha158 | Backtesting | backtrader strategy backtesting, optional Qlib Alpha158 |
+| 📈 量化回测 | backtrader 策略回测，可选 Qlib 自定义 alpha 因子 | Backtesting | backtrader strategy backtesting, optional Qlib custom alpha factors |
 | 📱 Discord | 交易信号 / 情报自动推送到 Discord | Discord | auto-push trade signals / intel to Discord |
 | 🖥️ Web UI | FastAPI + React 19：ControlTower / Portfolio / Recommendations / Review | Web UI | FastAPI + React 19: ControlTower / Portfolio / Recommendations / Review |
 | ⚙️ 自动化调度 | Celery 45+ 定时任务 + 常驻 agent 守护进程 | Automation | Celery beat (45+ tasks) + always-on agent daemon |
@@ -88,7 +88,7 @@ src/web/ FastAPI  ·  frontend/ React SPA  ·  src/discord_bot/  ·  openclaw/ C
 | 数据 / Data | AKShare, adata, EastMoney push2 (curl_cffi), QMT/XtQuant (optional), pandas, numpy, pyarrow, yfinance |
 | 分析 / Analysis | ta (technical indicators), plotly, matplotlib |
 | AI 预测 / AI | Anthropic Claude, Google Gemini, OpenAI, DeepSeek, Claude Code bridge (fallback) |
-| 量化 & Agent / Quant | hmmlearn (HMM 市场状态), networkx (知识图谱), scikit-learn, Qlib Alpha158 (optional) |
+| 量化 & Agent / Quant | hmmlearn (HMM 市场状态), networkx (知识图谱), scikit-learn, Qlib custom alpha factors (optional) |
 | 策略回测 / Backtest | backtrader, Qlib (optional) |
 | 后端 / Backend | FastAPI, uvicorn, Redis (cache + Streams 事件总线), Celery + Beat |
 | 前端 / Frontend | React 19, TypeScript, Vite, shadcn/ui, Tailwind CSS 4, React Query |
@@ -98,6 +98,16 @@ src/web/ FastAPI  ·  frontend/ React SPA  ·  src/discord_bot/  ·  openclaw/ C
 ---
 
 ## 快速开始 · Quick Start
+
+### 0. 30 秒离线演示 / Try it in 30s (no Docker, no API keys, no network)
+
+```bash
+pip install -r requirements.txt
+make demo      # 用样例数据跑 v2 回测 / runs the v2 backtest on bundled sample data
+```
+
+See [`docs/how-it-works.md`](docs/how-it-works.md) for what it does. For the full
+stack (web UI, agent loop, automation), continue below.
 
 ### 前置条件 / Prerequisites
 
@@ -223,8 +233,10 @@ npm run dev        # 开发模式 / Dev mode
 ## 文档 · Documentation
 
 - [`docs/`](docs/README.md) — documentation index
+- [`docs/how-it-works.md`](docs/how-it-works.md) — **how the agent works + what the backtest taught us** (newcomer overview)
 - [`docs/guides/development-guide.md`](docs/guides/development-guide.md) — architecture, tech stack, data flow (**start here**)
 - [`docs/guides/runbook.md`](docs/guides/runbook.md) — local setup & run
+- [`docs/backtest-v2-results.md`](docs/backtest-v2-results.md) — **honest out-of-sample backtest of the v2 stack** (spoiler: no demonstrated alpha vs buy-and-hold)
 - [`docs/testing/`](docs/testing/test-strategy.md) — test strategy & cases
 - [`docs/research-workstation-README.md`](docs/research-workstation-README.md) — research workstation usage
 

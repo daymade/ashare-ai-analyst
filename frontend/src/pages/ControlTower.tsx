@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import type { ActionItem, RegimeState } from "@/types/action"
 import type { RealtimeQuote } from "@/types/market"
+import WatchlistQuotes from "@/components/stock/WatchlistQuotes"
 
 // ---------------------------------------------------------------------------
 // Regime Bar
@@ -39,9 +40,8 @@ function RegimeBar({
   marketLabel: string
   isTrading: boolean
 }) {
-  const phase = regime?.sentiment?.phase_cn ?? "--"
-  const riskRemaining = regime?.risk_budget?.remaining_pct
-  const riskUsed = regime?.risk_budget?.used_pct
+  const phase = regime?.sentiment_phase_cn ?? "未知"
+  const riskRemaining = regime?.risk_budget_remaining == null ? null : regime.risk_budget_remaining * 100
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card px-4 py-2.5">
@@ -63,6 +63,7 @@ function RegimeBar({
         <Activity className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-muted-foreground">情绪:</span>
         <span className="font-medium">{phase}</span>
+        {regime?.updated_at && <span className="text-xs text-muted-foreground">{new Date(regime.updated_at).toLocaleString("zh-CN", {timeZone: "Asia/Shanghai"})}</span>}
       </div>
 
       <span className="text-muted-foreground">|</span>
@@ -83,9 +84,7 @@ function RegimeBar({
         ) : (
           <span className="text-muted-foreground">--</span>
         )}
-        {riskUsed != null && (
-          <span className="text-xs text-muted-foreground">(已用 {riskUsed.toFixed(1)}%)</span>
-        )}
+
       </div>
     </div>
   )
@@ -318,7 +317,7 @@ function RecentEvents({ messages }: { messages: { id: string; type: string; titl
             <div key={msg.id} className="flex items-center gap-2 text-xs">
               <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
               <span className="text-muted-foreground font-numeric shrink-0">
-                {new Date(msg.created_at).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
+                {new Date(msg.created_at).toLocaleString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
               </span>
               <span className="truncate text-foreground">{msg.title}</span>
             </div>
@@ -339,7 +338,7 @@ export default function ControlTower() {
   const { positions } = usePortfolio()
   const positionSymbols = useMemo(() => positions.map((p) => p.symbol), [positions])
   const { data: realtimeData } = useRealtimeQuotes(
-    positionSymbols.length > 0 ? positionSymbols : undefined,
+    positionSymbols,
   )
   const confirmMutation = useConfirmAction()
   const rejectMutation = useRejectAction()
@@ -417,6 +416,7 @@ export default function ControlTower() {
 
       {/* Regime Bar */}
       <RegimeBar regime={bootstrap?.regime} marketLabel={marketLabel} isTrading={isTrading} />
+      <WatchlistQuotes />
 
       {/* Action Queue */}
       <div className="space-y-3">
@@ -428,12 +428,11 @@ export default function ControlTower() {
         </h2>
 
         {sortedActions.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <div className="flex flex-col items-center gap-2">
-                <Shield className="h-8 w-8 text-muted-foreground/40" />
+          <Card className="py-0">
+            <CardContent className="px-4 py-4">
+              <div className="flex items-center justify-between gap-2">
                 <p className="text-sm text-muted-foreground">暂无待执行操作</p>
-                <p className="text-xs text-muted-foreground/60">AI 投资团队正在监控市场，有操作建议时会通知您</p>
+                <Link to="/recommendations" className="text-sm underline underline-offset-4">查看选股分析</Link>
               </div>
             </CardContent>
           </Card>

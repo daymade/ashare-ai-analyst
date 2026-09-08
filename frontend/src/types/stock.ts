@@ -10,6 +10,7 @@ export interface WatchlistItem {
   pct_change: number | null
   volume: number | null
   date: string | null
+  source?: string | null
 }
 
 export interface StockDetail {

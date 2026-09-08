@@ -22,10 +22,12 @@ Auth token: env var ``AKSHARE_PROXY_TOKEN``.
 
 from __future__ import annotations
 
+import math
 import os
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from importlib.metadata import version
 from typing import Any
 
 from src.utils.config import load_config
@@ -73,7 +75,7 @@ def _safe_float(v: Any) -> float | None:
         return None
     try:
         f = float(v)
-        return None if f != f else f  # NaN check
+        return None if math.isnan(f) else f
     except (ValueError, TypeError):
         return None
 
@@ -132,7 +134,8 @@ class EastMoneyClient:
 
     AUTH_PORT = 47001
     AUTH_PATH = "/api/akshare-auth"
-    AUTH_VERSION = "0.2.13"
+    # Use the installed gateway client's protocol version, not a stale copy.
+    AUTH_VERSION = version("akshare-proxy-patch")
 
     def __init__(
         self,
@@ -151,14 +154,17 @@ class EastMoneyClient:
         self._session: Any = None
         self._direct_ok: bool | None = None  # None = untested
         self._auth_cache = _AuthCache(ttl=15.0)
+        self._auth_retry_at = 0.0
 
     # -- Session management --------------------------------------------------
 
     def _get_session(self) -> Any:
         if self._session is None:
-            from curl_cffi.requests import Session
+            # The proxy SDK replaces curl_cffi.requests.Session with a requests
+            # class. Import the original implementation to keep this client isolated.
+            from curl_cffi.requests.session import Session
 
-            self._session = Session(impersonate="chrome")
+            self._session = Session(impersonate="chrome", trust_env=False)
         return self._session
 
     def close(self) -> None:
@@ -184,6 +190,8 @@ class EastMoneyClient:
         cached = self._auth_cache.get()
         if cached:
             return cached
+        if time.monotonic() < self._auth_retry_at:
+            return None
 
         auth_url = f"http://{self._gateway}:{self.AUTH_PORT}{self.AUTH_PATH}"
         max_attempts = 3
@@ -215,7 +223,8 @@ class EastMoneyClient:
                     "Gateway auth failed: %s",
                     data.get("error_msg", "no ua"),
                 )
-                break  # Got JSON but invalid — don't retry
+                self._auth_retry_at = time.monotonic() + 60
+                return None
             except Exception as exc:
                 if attempt < max_attempts - 1:
                     import time as _time
@@ -224,6 +233,7 @@ class EastMoneyClient:
                     continue
                 logger.warning("Gateway auth request failed: %s", exc)
 
+        self._auth_retry_at = time.monotonic() + 60
         # Return stale cache if fresh fetch failed
         return self._auth_cache.data
 
@@ -266,12 +276,14 @@ class EastMoneyClient:
         if not auth:
             return None
 
-        headers = {
-            "User-Agent": auth["ua"],
-            "Cookie": (
+        cookie = auth.get("cookie")
+        if not cookie and auth.get("nid18") and auth.get("nid18_create_time"):
+            cookie = (
                 f"nid18={auth['nid18']}; nid18_create_time={auth['nid18_create_time']}"
-            ),
-        }
+            )
+        headers = {"User-Agent": auth["ua"]}
+        if cookie:
+            headers["Cookie"] = cookie
         proxies = {"http": auth["proxy"], "https": auth["proxy"]}
 
         try:

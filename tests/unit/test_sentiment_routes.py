@@ -125,3 +125,28 @@ class TestCrossMarketEndpoint:
         assert data["symbol"] == "001330"
         assert data["impact_direction"] == "positive"
         assert "combined_impact_score" in data
+
+
+def test_symbol_log_keeps_control_characters_on_one_line(caplog):
+    import asyncio
+    from src.web.routes.api_v1.sentiment import get_cross_market_analysis
+
+    svc = MagicMock()
+    svc.get_cross_market_analysis.side_effect = RuntimeError("provider failed")
+    symbol = "600519\r\nFAKE LOG\x1b[31m\u2028entry"
+    result = asyncio.run(get_cross_market_analysis(symbol, svc))
+    assert result["symbol"] == symbol
+    record = next(
+        r for r in caplog.records if "Cross-market analysis failed" in r.message
+    )
+    assert "\n" not in record.getMessage()
+    assert "\r" not in record.getMessage()
+    assert "\x1b" not in record.getMessage()
+    assert "\\r\\n" in record.getMessage()
+
+
+def test_symbol_middleware_rejects_trailing_newline():
+    client, svc = _create_test_client()
+    resp = client.get("/api/v1/sentiment/cross-market/600519%0A")
+    assert resp.status_code == 400
+    svc.get_cross_market_analysis.assert_not_called()

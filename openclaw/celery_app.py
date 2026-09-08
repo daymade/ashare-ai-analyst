@@ -103,7 +103,10 @@ def create_celery_app() -> Celery:
     default_broker = celery_cfg.get("broker_url", "redis://localhost:6379/0")
     broker_url: str = os.environ.get("CELERY_BROKER_URL", default_broker)
 
-    result_backend: str = celery_cfg.get("result_backend", "redis://localhost:6379/1")
+    result_backend: str = os.environ.get(
+        "CELERY_RESULT_BACKEND",
+        celery_cfg.get("result_backend", "redis://localhost:6379/1"),
+    )
     timezone: str = celery_cfg.get("timezone", "Asia/Shanghai")
 
     app = Celery("astock", broker=broker_url, backend=result_backend)

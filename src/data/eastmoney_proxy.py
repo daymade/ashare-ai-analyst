@@ -64,6 +64,12 @@ def _install_akshare_proxy_patch() -> bool:
         logger.warning("AKSHARE_PROXY_TOKEN not set, akshare-proxy-patch skipped")
         return False
 
+    from src.data.eastmoney_client import get_eastmoney_client
+
+    if not get_eastmoney_client()._get_auth_config():
+        logger.warning("Gateway auth unavailable; keeping free-source fallback active")
+        return False
+
     retry = proxy_cfg.get("retry", 30)
     hook_domains = proxy_cfg.get(
         "hook_domains",
@@ -83,9 +89,8 @@ def _install_akshare_proxy_patch() -> bool:
             hook_domains=hook_domains,
         )
         logger.info(
-            "akshare-proxy-patch installed (gateway=%s, token=%s..., domains=%d)",
+            "akshare-proxy-patch installed (gateway=%s, domains=%d)",
             gateway,
-            token[:8] if len(token) > 8 else token,
             len(hook_domains),
         )
         return True

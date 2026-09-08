@@ -16,6 +16,14 @@ A map of the project documentation. Start with the development guide.
 - [QA Test Cases](testing/qa-test-cases.md) — API/endpoint QA matrix.
 - [E2E](testing/e2e.md) — end-to-end test execution guide.
 
+## Results
+
+- [How It Works](how-it-works.md) — newcomer tour of the OODA decision loop and the honest backtest result.
+
+- [v2 Backtest Results](backtest-v2-results.md) — honest out-of-sample evaluation of the
+  v2 signal/sizing stack (2019–2024, 14 A-shares). Reproduces with
+  [`scripts/backtest_v2_universe.py`](../scripts/backtest_v2_universe.py).
+
 ## Components
 
 - [Research Workstation](research-workstation-README.md) — the multi-model research

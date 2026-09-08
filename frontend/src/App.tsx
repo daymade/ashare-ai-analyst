@@ -6,7 +6,7 @@ import { Layout } from "@/components/layout/Layout"
 import CommandPalette from "@/components/stock/CommandPalette"
 import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog"
 import { DisclaimerDialog } from "@/components/onboarding/DisclaimerDialog"
-import { useRealtimeQuotes, useMarketIndices } from "@/hooks/useMarket"
+import { useRealtimeQuotes } from "@/hooks/useMarket"
 import { useRealtimeWS } from "@/hooks/useRealtimeWS"
 import { useWatchlist } from "@/hooks/useStocks"
 import { usePortfolio } from "@/hooks/usePortfolio"
@@ -34,7 +34,6 @@ function GlobalRealtimeProvider() {
   useRealtimeWS(symbols)
   // HTTP polling safety net (30s fallback when WS+SSE both down)
   useRealtimeQuotes()
-  useMarketIndices()
   return null
 }
 

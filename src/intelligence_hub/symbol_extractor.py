@@ -167,7 +167,9 @@ class SymbolExtractor:
             except Exception as exc:
                 logger.warning("SymbolExtractor: akshare load failed: %s", exc)
 
-            # Fallback to local cache if akshare yielded nothing
+            # Fall back to the local cache whenever akshare yielded nothing —
+            # this covers BOTH a raised exception and a degraded source that
+            # silently returns an empty/None result (e.g. a timed-out proxy).
             if not names:
                 cached = self._load_cache()
                 if cached:

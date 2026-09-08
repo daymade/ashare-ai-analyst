@@ -251,7 +251,16 @@ class WireDigestAgent:
         if movers:
             parts.append(f"主要异动: {', '.join(movers[:5])}")
         else:
-            parts.append("全球市场整体平稳")
+            observed = [
+                x
+                for x in [*pulse.indices, *pulse.commodities]
+                if x.get("pct_change") is not None
+            ]
+            parts.append(
+                "已取得的行情未见明显异动"
+                if observed
+                else "未取得全球市场行情，无法判断市场状态"
+            )
 
         if pulse.bond_yields:
             us_10y = pulse.bond_yields.get("US_10Y")

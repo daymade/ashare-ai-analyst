@@ -35,7 +35,9 @@ _SLOW_REQUEST_THRESHOLD = 2.0  # seconds
 _SYMBOL_RE = re.compile(r"^[A-Za-z]{0,2}\d{6}(?:\.[A-Za-z]{2,3})?$")
 
 # URL path segments where the next segment is a stock symbol
-_SYMBOL_ROUTES = re.compile(r"/api/v1/(?:stock|predict|advisor/stock)/([^/]+)")
+_SYMBOL_ROUTES = re.compile(
+    r"/api/v1/(?:stock|predict|advisor/stock|sentiment/cross-market)/([^/]+)"
+)
 
 
 @asynccontextmanager
@@ -165,11 +167,13 @@ def create_app() -> FastAPI:
     # Symbol validation middleware — reject injection payloads early
     @app.middleware("http")
     async def symbol_validation_middleware(request: Request, call_next):
-        path = request.url.path
+        # URL parsing strips control characters; validate the decoded ASGI path
+        # that routing actually consumes, before any such normalization.
+        path = request.scope["path"]
         m = _SYMBOL_ROUTES.match(path)
         if m:
             symbol = m.group(1)
-            if not _SYMBOL_RE.match(symbol):
+            if not _SYMBOL_RE.fullmatch(symbol):
                 return JSONResponse(
                     status_code=400,
                     content={

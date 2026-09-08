@@ -713,7 +713,12 @@ def get_redis():
 
         config = load_config("openclaw")
         broker = config.get("celery", {}).get("broker_url", "redis://redis:6379/0")
-        return redis.from_url(broker, decode_responses=True)
+        import os
+
+        broker = os.environ.get("CELERY_BROKER_URL", broker)
+        return redis.from_url(
+            broker, decode_responses=True, socket_connect_timeout=2, socket_timeout=2
+        )
     except Exception:
         return None
 

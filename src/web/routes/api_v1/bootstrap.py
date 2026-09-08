@@ -56,8 +56,9 @@ def _get_regime_data(redis_client) -> dict:
         "sentiment_phase": "unknown",
         "sentiment_phase_cn": "未知",
         "hmm_state": "unknown",
-        "hmm_probability": 0.0,
-        "risk_budget_remaining": 0.03,
+        "hmm_probability": None,
+        "risk_budget_remaining": None,
+        "updated_at": None,
     }
     if not redis_client:
         return default
@@ -75,10 +76,11 @@ def _get_regime_data(redis_client) -> dict:
             result["sentiment_phase"] = regime.get("sentiment_phase", "unknown")
             result["sentiment_phase_cn"] = regime.get("sentiment_phase_cn", "未知")
             result["hmm_state"] = regime.get("hmm_state", "unknown")
-            result["hmm_probability"] = regime.get("hmm_probability", 0.0)
+            result["hmm_probability"] = regime.get("hmm_probability")
+            result["updated_at"] = regime.get("updated_at")
         if raw_risk:
             risk = json.loads(raw_risk)
-            result["risk_budget_remaining"] = risk.get("remaining_pct", 0.03)
+            result["risk_budget_remaining"] = risk.get("remaining_pct")
         return result
     except Exception:
         logger.debug("Failed to read belief_state from Redis", exc_info=True)

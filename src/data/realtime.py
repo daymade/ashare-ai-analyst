@@ -6,6 +6,7 @@ fallback chain: QMT -> Xueqiu -> Sina (hq.sinajs.cn) -> adata.
 Per PRD v2.0 FR-RT001: Multi-source quote manager with fallback chain.
 """
 
+import math
 import re
 import time
 from typing import Any
@@ -13,7 +14,11 @@ from typing import Any
 import pandas as pd
 import requests as _requests
 
-from src.data.source_router import DataSourceRouter, SourceDomain
+from src.data.source_router import (
+    DataSourceRouter,
+    SourceDomain,
+    get_source_router,
+)
 from src.utils.config import load_config
 from src.utils.logger import get_logger
 
@@ -79,7 +84,7 @@ class RealtimeQuoteManager:
         self._cache_ttl: float = float(rt_cfg.get("cache_ttl_seconds", 5))
         self._batch_size: int = rt_cfg.get("batch_size", 50)
         self._rate_limit: float = 1.0 / rt_cfg.get("rate_limit_per_second", 2)
-        self._source_router = source_router or DataSourceRouter(config_name)
+        self._source_router = source_router or get_source_router(config_name)
         self._cache: dict[str, tuple[float, dict[str, Any]]] = {}
         self._last_request_ts: float = 0.0
         self._xueqiu_session: _requests.Session | None = None
@@ -199,6 +204,8 @@ class RealtimeQuoteManager:
 
                 if result:
                     self._source_router.record_success(source)
+                    for record in result:
+                        record.setdefault("source", source.value)
                     return result
             except Exception as exc:
                 logger.warning("Source %s failed: %s", source.value, exc)
@@ -296,7 +303,9 @@ class RealtimeQuoteManager:
                 if len(fields) < 10 or not fields[3]:
                     continue  # empty quote (suspended etc.)
 
-                record: dict[str, Any] = {"symbol": sym}
+                record: dict[str, Any] = {"symbol": sym, "source": "sina"}
+                if len(fields) > 31 and fields[30] and fields[31]:
+                    record["date"] = f"{fields[30]}T{fields[31]}+08:00"
                 for idx, key in _SINA_HQ_FIELDS.items():
                     if idx < len(fields):
                         val = fields[idx]
@@ -396,7 +405,7 @@ class RealtimeQuoteManager:
                     record[our_key] = item[xq_key]
             # Clean NaN values (same as Sina/adata paths)
             for k, v in record.items():
-                if isinstance(v, float) and v != v:  # NaN check
+                if isinstance(v, float) and math.isnan(v):  # NaN check
                     record[k] = None
             results.append(record)
 
@@ -443,7 +452,7 @@ class RealtimeQuoteManager:
         records = df.to_dict(orient="records")
         for rec in records:
             for k, v in rec.items():
-                if isinstance(v, float) and v != v:  # NaN check
+                if isinstance(v, float) and math.isnan(v):  # NaN check
                     rec[k] = None
         return records
 

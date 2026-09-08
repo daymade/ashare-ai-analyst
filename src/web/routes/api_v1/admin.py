@@ -7,6 +7,7 @@ routing configuration, and Qlib diagnostics as JSON.
 from __future__ import annotations
 
 import asyncio
+import logging
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
@@ -29,7 +30,11 @@ from src.web.routes.api_v1.schemas import (
     UsageDashboard,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(tags=["admin"])
+
+_GENERIC_ERROR_MESSAGE = "Internal server error"
 
 
 @router.get("/keys", response_model=list[ApiKeyInfo])
@@ -198,9 +203,9 @@ async def get_data_sources(
     Provides a unified view of all data source backends with their
     current health, latency, and availability status.
     """
-    from src.data.source_router import DataSourceRouter
+    from src.data.source_router import get_source_router
 
-    router_instance = DataSourceRouter()
+    router_instance = get_source_router()
     router_status = router_instance.get_status()
     tracker_health = tracker.get_all_health()
 
@@ -222,15 +227,17 @@ async def get_qlib_status_endpoint() -> dict:
     # Data status (runs synchronously — reads files)
     try:
         result["data"] = await asyncio.to_thread(get_qlib_status)
-    except Exception as exc:
-        result["data"] = {"error": str(exc)}
+    except Exception:
+        logger.exception("Failed to fetch Qlib data status")
+        result["data"] = {"error": _GENERIC_ERROR_MESSAGE}
 
     # Adapter status
     try:
         adapter = QlibAdapter()
         result["adapter"] = adapter.get_health_info()
-    except Exception as exc:
-        result["adapter"] = {"error": str(exc)}
+    except Exception:
+        logger.exception("Failed to fetch Qlib adapter status")
+        result["adapter"] = {"error": _GENERIC_ERROR_MESSAGE}
 
     return result
 

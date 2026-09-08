@@ -37,6 +37,12 @@ CREATE TABLE IF NOT EXISTS ai_news (
 CREATE INDEX IF NOT EXISTS idx_ai_news_published ON ai_news(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_news_source ON ai_news(source_id);
 CREATE INDEX IF NOT EXISTS idx_ai_news_category ON ai_news(category);
+CREATE TABLE IF NOT EXISTS ai_news_sync (
+    source_id TEXT PRIMARY KEY,
+    last_attempt TEXT,
+    status TEXT NOT NULL,
+    error TEXT
+);
 """
 
 
@@ -66,7 +72,7 @@ class AiNewsService:
         """Insert item if URL not already present. Returns True if inserted."""
         now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         try:
-            self._conn.execute(
+            cursor = self._conn.execute(
                 """INSERT OR IGNORE INTO ai_news
                    (title, url, summary, source_id, source_name, category,
                     icon, tags, published_at, fetched_at)
@@ -80,17 +86,29 @@ class AiNewsService:
                     item.category,
                     item.icon,
                     json.dumps(item.tags),
-                    item.published_at.isoformat(),
+                    item.published_at.isoformat() if item.published_at else "",
                     now,
                 ),
             )
-            return self._conn.total_changes > 0
+            inserted = cursor.rowcount > 0
+            if not inserted:
+                # Correct dates from older parsers without resetting read state
+                # or counting an existing URL as a newly discovered article.
+                self._conn.execute(
+                    "UPDATE ai_news SET published_at = ? WHERE url = ?",
+                    (
+                        item.published_at.isoformat() if item.published_at else "",
+                        item.url,
+                    ),
+                )
+            return inserted
         except sqlite3.IntegrityError:
             return False
 
     def refresh(self, source_id: str | None = None) -> dict[str, int]:
         """Fetch fresh items and persist. Returns {source_id: new_count}."""
         results: dict[str, int] = {}
+        self._aggregator.invalidate_cache(source_id)
         if source_id:
             items = self._aggregator.fetch_source(source_id)
             new_count = 0
@@ -106,6 +124,17 @@ class AiNewsService:
                     by_source[item.source_id] = by_source.get(item.source_id, 0) + 1
             results = by_source
 
+        for status in self._aggregator.get_source_status():
+            if status.get("last_attempt"):
+                self._conn.execute(
+                    "INSERT OR REPLACE INTO ai_news_sync VALUES (?, ?, ?, ?)",
+                    (
+                        status["id"],
+                        status["last_attempt"],
+                        status["status"],
+                        status.get("error"),
+                    ),
+                )
         self._conn.commit()
         total = sum(results.values())
         logger.info(
@@ -155,7 +184,7 @@ class AiNewsService:
         # Items
         rows = self._conn.execute(
             f"""SELECT * FROM ai_news {where_clause}
-                ORDER BY published_at DESC
+                ORDER BY julianday(published_at) DESC, id DESC
                 LIMIT ? OFFSET ?""",
             [*params, limit, offset],
         ).fetchall()
@@ -228,6 +257,12 @@ class AiNewsService:
                     "circuit_open": status.get("circuit_open", False),
                 }
             )
+        sync = {
+            r["source_id"]: dict(r)
+            for r in self._conn.execute("SELECT * FROM ai_news_sync").fetchall()
+        }
+        for stat in stats:
+            stat.update(sync.get(stat["source_id"], {"status": "not_fetched"}))
         return stats
 
     def cleanup_old(self, days: int = 30) -> int:
@@ -237,7 +272,8 @@ class AiNewsService:
             time.gmtime(time.time() - days * 86400),
         )
         cur = self._conn.execute(
-            "DELETE FROM ai_news WHERE published_at < ?", (cutoff,)
+            "DELETE FROM ai_news WHERE julianday(COALESCE(NULLIF(published_at, ''), fetched_at)) < julianday(?)",
+            (cutoff,),
         )
         self._conn.commit()
         deleted = cur.rowcount
@@ -248,6 +284,7 @@ class AiNewsService:
     @staticmethod
     def _row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
         d = dict(row)
+        d["published_at"] = d["published_at"] or None
         if "tags" in d and isinstance(d["tags"], str):
             try:
                 d["tags"] = json.loads(d["tags"])

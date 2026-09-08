@@ -19,6 +19,7 @@ class WatchlistItem(BaseModel):
     pct_change: float | None = None
     volume: int | None = None
     date: str | None = None
+    source: str | None = None
 
 
 class StockDetail(BaseModel):
