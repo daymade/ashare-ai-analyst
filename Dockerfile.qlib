@@ -1,12 +1,10 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
-# System deps for Qlib (numpy, pandas, cython compilation) + timezone
+# System deps for Qlib (numpy, pandas, cython compilation)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc g++ git tzdata \
-    && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
-    && echo "Asia/Shanghai" > /etc/timezone \
+    gcc g++ git \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Qlib from source (no ARM64 wheels on PyPI) + service deps
