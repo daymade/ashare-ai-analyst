@@ -68,7 +68,7 @@ networkx>=3.0
 # qlib>=0.9.0  # Optional: pip install qlib (heavy deps, not in Docker)
 
 # Dev tools
-ruff>=0.4.0
+ruff==0.15.19
 pytest>=8.0.0
 pytest-asyncio>=0.24.0
 pytest-benchmark>=4.0
